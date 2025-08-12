@@ -1,11 +1,11 @@
 from fastapi import FastAPI, UploadFile, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from bot_utils import send_to_discord
+from bot_utils import send_certificate
 
 fastapi_app = FastAPI()
 
-# Add CORS middleware with specific origins
+# Add CORS middleware with specific origins and headers for rate limiting
 fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -18,6 +18,7 @@ fastapi_app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Retry-After", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]
 )
 
 # Add a health check endpoint
@@ -41,26 +42,42 @@ async def birth_cert_submit(
     state_file_num: str = Form(...),
     local_reg_num: str = Form(...)
 ):
-    # Read the image bytes
-    img_bytes = await image.read()
+    try:
+        # Read the image bytes
+        img_bytes = await image.read()
 
-    # Construct the child full name
-    child_full_name = f"{name_first}_{name_middle}_{name_last}"
+        # Construct the child full name
+        child_full_name = f"{name_first}_{name_middle}_{name_last}"
 
-    # Send the image to Discord with certificate numbers
-    sent = send_to_discord(
-        img_bytes, 
-        child_full_name, 
-        birth_state, 
-        birth_city,
-        state_file_num,
-        local_reg_num
-    )
+        # Send the image to Discord with certificate numbers
+        sent = await send_certificate(
+            img_bytes,
+            child_full_name,
+            birth_state,
+            birth_city,
+            state_file_num,
+            local_reg_num,
+            certificate_type="birth"
+        )
 
-    if sent:
-        return JSONResponse({"message": "Birth certificate sent to Discord!"})
-    else:
-        return JSONResponse({"message": "Failed to send to Discord."}, status_code=500)
+        if sent:
+            return JSONResponse({"message": "Birth certificate sent to Discord!"})
+        else:
+            return JSONResponse(
+                {
+                    "message": "Failed to send to Discord. Please try again in a few moments.",
+                    "error": "RATE_LIMIT"
+                }, 
+                status_code=429
+            )
+    except Exception as e:
+        return JSONResponse(
+            {
+                "message": f"An error occurred: {str(e)}",
+                "error": "SERVER_ERROR"
+            }, 
+            status_code=500
+        )
 
 @fastapi_app.post("/api/marriage-certificate/submit")
 async def marriage_cert_submit(
@@ -83,17 +100,51 @@ async def marriage_cert_submit(
     couple_names = f"{groom_first}_{groom_last}_and_{bride_first}_{bride_last}"
 
     # Send the image to Discord with certificate numbers
-    sent = send_to_discord(
-        img_bytes, 
-        couple_names, 
-        marriage_state, 
+    sent = await send_certificate(
+        img_bytes,
+        couple_names,
+        marriage_state,
         marriage_city,
         state_file_num,
         local_reg_num,
-        is_marriage=True
+        certificate_type="marriage"
     )
 
     if sent:
         return JSONResponse({"message": "Marriage certificate sent to Discord!"})
     else:
         return JSONResponse({"message": "Failed to send to Discord."}, status_code=500)
+
+@fastapi_app.post("/api/business-permit/submit")
+async def business_permit_submit(
+    image: UploadFile,
+    business_name: str = Form(...),
+    owner_name: str = Form(...),
+    business_state: str = Form(...),
+    business_city: str = Form(...),
+    permit_number: str = Form(""),
+    local_reg_num: str = Form("")
+):
+    try:
+        img_bytes = await image.read()
+        display_name = f"{business_name}_owned_by_{owner_name}".replace(" ", "_")
+        sent = await send_certificate(
+            img_bytes,
+            display_name,
+            business_state,
+            business_city,
+            permit_number,
+            local_reg_num,
+            certificate_type="business"
+        )
+        if sent:
+            return JSONResponse({"message": "Business permit sent to Discord!"})
+        else:
+            return JSONResponse({"message": "Failed to send to Discord."}, status_code=500)
+    except Exception as e:
+        return JSONResponse({"message": f"An error occurred: {str(e)}"}, status_code=500)
+
+if __name__ == "__main__":
+    # Allow direct execution: python app.py
+    import uvicorn
+    uvicorn.run("app:fastapi_app", host="127.0.0.1", port=8000, reload=True)

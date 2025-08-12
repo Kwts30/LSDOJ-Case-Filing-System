@@ -1,17 +1,4 @@
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://127.0.0.1:8000' 
-    : 'https://kwits-doj.onrender.com'; // Replace with your actual Render URL from the dashboard
-
-// Add debug logging
-console.log('Current hostname:', window.location.hostname);
-console.log('Using API URL:', API_BASE_URL);
-
-// Test API connection on page load
-fetch(`${API_BASE_URL}/api/health`)
-    .then(response => response.json())
-    .then(data => console.log('API Health Check:', data))
-    .catch(error => console.error('API Health Check Failed:', error));
+// Removed remote API & Discord submission; now all certificates download locally as images.
 
 // Modal elements
 const loadingModal = document.getElementById('loading-modal');
@@ -69,70 +56,23 @@ closeErrorButton.addEventListener('click', hideErrorModal);
 
 document.getElementById('birth-certificate-form').addEventListener('submit', async (event) => {
     event.preventDefault();
-
-    // Show loading modal
-    showLoadingModal();
-
-    // Capture the canvas as a Blob (image file)
+    // Ensure preview is up to date
+    drawPreview();
     const canvas = document.getElementById('preview-canvas');
-    const imageBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-
-    // Prepare form data
-    const formData = new FormData();
-    formData.append('image', imageBlob, 'preview.png');
-    formData.append('name_first', document.getElementById('name_first').value);
-    formData.append('name_middle', document.getElementById('name_middle').value);
-    formData.append('name_last', document.getElementById('name_last').value);
-    formData.append('birth_state', document.getElementById('birth_state').value);
-    formData.append('birth_city', document.getElementById('birth_city').value);
-    formData.append('state_file_num', document.getElementById('state_file_num').value);
-    formData.append('local_reg_num', document.getElementById('local_reg_num').value);
-
-    try {
-        // Create AbortController for the request
-        const controller = new AbortController();
-        currentRequest = controller;
-
-        // Send the form data to the backend
-        const response = await fetch(`${API_BASE_URL}/api/birth-certificate/submit`, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal
-        });
-
-        let result = {};
-        try {
-            result = await response.json();
-            console.log('Parsed JSON:', result);
-        } catch (e) {
-            result.message = 'Unknown error (invalid JSON response)';
-            console.log('JSON parse error:', e);
-        }
-        console.log('Response object:', response);
-        
-        // Hide loading modal
-        hideLoadingModal();
-
-        if (response.ok) {
-            document.getElementById('success-message').textContent = 'Birth certificate has been successfully processed and sent to Discord!';
-            showSuccessModal();
-            // Clear all form fields
-            document.getElementById('birth-certificate-form').reset();
-            drawPreview();
-        } else {
-            showErrorModal(result.message || 'An error occurred while processing your request.');
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('Request was cancelled');
-        } else {
-            console.error('Error submitting the form:', error);
-            showErrorModal('An error occurred while submitting the form.');
-        }
-        hideLoadingModal();
-    } finally {
-        currentRequest = null;
-    }
+    const first = document.getElementById('name_first').value || 'First';
+    const last = document.getElementById('name_last').value || 'Last';
+    const fileName = `birth_certificate_${first}_${last}.png`.replace(/\s+/g, '_');
+    canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        document.getElementById('success-message').textContent = 'Birth certificate image downloaded.';
+        showSuccessModal();
+    }, 'image/png');
 });
 
 const form = document.getElementById('birth-certificate-form');
@@ -154,6 +94,10 @@ previewImage.src = 'assets/birthcert.png';
 const marriagePreviewImage = new window.Image();
 marriagePreviewImage.src = 'assets/marriagecert.png';
 
+// Business permit preview image (placeholder - user should add actual template as assets/businesspermit.png)
+const businessPreviewImage = new window.Image();
+businessPreviewImage.src = 'assets/businesspermit.png';
+
 // Track current certificate type
 let currentCertificateType = 'birth';
 
@@ -168,11 +112,19 @@ document.querySelectorAll('.sidebar-menu button').forEach(button => {
         if (button.textContent === 'Marriage Certificate') {
             document.getElementById('birth-certificate-section').style.display = 'none';
             document.getElementById('marriage-certificate-section').style.display = 'block';
+            document.getElementById('business-permit-section').style.display = 'none';
             currentCertificateType = 'marriage';
             previewImage.src = 'assets/marriagecert.png';
+        } else if (button.textContent === 'Business Permit') {
+            document.getElementById('birth-certificate-section').style.display = 'none';
+            document.getElementById('marriage-certificate-section').style.display = 'none';
+            document.getElementById('business-permit-section').style.display = 'block';
+            currentCertificateType = 'business';
+            previewImage.src = 'assets/businesspermit.png';
         } else {
             document.getElementById('birth-certificate-section').style.display = 'block';
             document.getElementById('marriage-certificate-section').style.display = 'none';
+            document.getElementById('business-permit-section').style.display = 'none';
             currentCertificateType = 'birth';
             previewImage.src = 'assets/birthcert.png';
         }
@@ -191,12 +143,16 @@ previewImage.onload = () => {
 };
 
 marriagePreviewImage.onload = () => {
-    // Just ensure the marriage image is loaded
     console.log('Marriage certificate template loaded');
+};
+
+businessPreviewImage.onload = () => {
+    console.log('Business permit template loaded');
 };
 
 form.addEventListener('input', drawPreview);
 document.getElementById('marriage-certificate-form').addEventListener('input', drawPreview);
+document.getElementById('business-permit-form').addEventListener('input', drawPreview);
 
 drawPreview(); // Show placeholders on load
 
@@ -277,7 +233,7 @@ function drawPreview() {
 
             ctx.fillText(value, scaledX, scaledY);
         });
-    } else {
+    } else if (currentCertificateType === 'marriage') {
         // Marriage certificate fields (all from template, placeholder coordinates)
         const fields = [
             { id: 'marriage_state_file_num', x: 75, y: 229, placeholder: 'SFN', fontStyle: 'bold' },
@@ -329,91 +285,74 @@ function drawPreview() {
         fields.forEach(field => {
             let value = document.getElementById(field.id)?.value;
             if (!value) value = field.placeholder;
-
-            // Set font properties
             let fontString = '';
             if (field.fontStyle) fontString += field.fontStyle + ' ';
             if (field.fontSize) fontString += field.fontSize + ' '; else fontString += '48px ';
             if (field.fontFamily) fontString += field.fontFamily; else fontString += 'times-new-roman';
             ctx.font = fontString;
-
-            // Scale the coordinates for high resolution
             const scaledX = field.x * SCALE_X;
             const scaledY = field.y * SCALE_Y;
-
+            ctx.fillText(value, scaledX, scaledY);
+        });
+    } else if (currentCertificateType === 'business') {
+        // Business permit fields - placeholder coordinates; adjust once template is finalized
+        const fields = [
+            { id: 'business_name', x: 120, y: 300, placeholder: 'Business Name' },
+            { id: 'owner_name', x: 120, y: 340, placeholder: 'Owner Name' },
+            { id: 'business_state', x: 120, y: 380, placeholder: 'State' },
+            { id: 'business_city', x: 300, y: 380, placeholder: 'City' },
+            { id: 'permit_number', x: 120, y: 420, placeholder: 'Permit #' },
+            { id: 'business_local_reg_num', x: 300, y: 420, placeholder: 'Local Reg #' }
+        ];
+        fields.forEach(field => {
+            let value = document.getElementById(field.id)?.value;
+            if (!value) value = field.placeholder;
+            let fontString = '48px times-new-roman';
+            ctx.font = fontString;
+            const scaledX = field.x * SCALE_X;
+            const scaledY = field.y * SCALE_Y;
             ctx.fillText(value, scaledX, scaledY);
         });
     }
 }
 
-// Add marriage certificate form submission handler
+// Marriage certificate download handler
 document.getElementById('marriage-certificate-form').addEventListener('submit', async (event) => {
     event.preventDefault();
-
-    // Show loading modal
-    showLoadingModal();
-
-    // Capture the canvas as a Blob (image file)
+    drawPreview();
     const canvas = document.getElementById('preview-canvas');
-    const imageBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const groom = document.getElementById('groom_last').value || 'Groom';
+    const bride = document.getElementById('bride_last').value || 'Bride';
+    const fileName = `marriage_certificate_${groom}_and_${bride}.png`.replace(/\s+/g, '_');
+    canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        document.getElementById('success-message').textContent = 'Marriage certificate image downloaded.';
+        showSuccessModal();
+    }, 'image/png');
+});
 
-    // Prepare form data
-    const formData = new FormData();
-    formData.append('image', imageBlob, 'preview.png');
-    formData.append('groom_first', document.getElementById('groom_first').value);
-    formData.append('groom_middle', document.getElementById('groom_middle').value);
-    formData.append('groom_last', document.getElementById('groom_last').value);
-    formData.append('bride_first', document.getElementById('bride_first').value);
-    formData.append('bride_middle', document.getElementById('bride_middle').value);
-    formData.append('bride_last', document.getElementById('bride_last').value);
-    formData.append('marriage_state', document.getElementById('marriage_state').value);
-    formData.append('marriage_city', document.getElementById('marriage_city').value);
-    formData.append('state_file_num', document.getElementById('marriage_state_file_num').value);
-    formData.append('local_reg_num', document.getElementById('marriage_local_reg_num').value);
-
-    try {
-        // Create AbortController for the request
-        const controller = new AbortController();
-        currentRequest = controller;
-
-        // Send the form data to the backend
-        const response = await fetch(`${API_BASE_URL}/api/marriage-certificate/submit`, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal
-        });
-
-        let result = {};
-        try {
-            result = await response.json();
-            console.log('Parsed JSON:', result);
-        } catch (e) {
-            result.message = 'Unknown error (invalid JSON response)';
-            console.log('JSON parse error:', e);
-        }
-        console.log('Response object:', response);
-        
-        // Hide loading modal
-        hideLoadingModal();
-
-        if (response.ok) {
-            document.getElementById('success-message').textContent = 'Marriage certificate has been successfully processed and sent to Discord!';
-            showSuccessModal();
-            // Clear all form fields
-            document.getElementById('marriage-certificate-form').reset();
-            drawPreview();
-        } else {
-            showErrorModal(result.message || 'An error occurred while processing your request.');
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('Request was cancelled');
-        } else {
-            console.error('Error submitting the form:', error);
-            showErrorModal('An error occurred while submitting the form.');
-        }
-        hideLoadingModal();
-    } finally {
-        currentRequest = null;
-    }
+// Business permit download handler
+document.getElementById('business-permit-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    drawPreview();
+    const canvas = document.getElementById('preview-canvas');
+    const business = document.getElementById('business_name').value || 'Business';
+    const fileName = `business_permit_${business}.png`.replace(/\s+/g, '_');
+    canvas.toBlob(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        document.getElementById('success-message').textContent = 'Business permit image downloaded.';
+        showSuccessModal();
+    }, 'image/png');
 });

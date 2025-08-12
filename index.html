@@ -24,6 +24,7 @@
             <ul class="sidebar-menu">
                 <li><button class="active">Birth Certificate</button></li>
                 <li><button>Marriage Certificate</button></li>
+                <li><button>Business Permit</button></li>
             </ul>
         </aside>
         <main class="content-area">
@@ -366,6 +367,39 @@
                             </div>
                         </div>
                         <button type="submit" class="submit-btn">Submit Marriage Certificate</button>
+                    </form>
+                </section>
+                <section class="form-section" id="business-permit-section" style="display:none;">
+                    <h2>Business Permit</h2>
+                    <form id="business-permit-form">
+                        <div class="form-block">
+                            <h3>Business Information</h3>
+                            <div class="form-row">
+                                <label>Business Name:</label>
+                                <input type="text" id="business_name" name="business_name" required>
+                            </div>
+                            <div class="form-row">
+                                <label>Owner Name:</label>
+                                <input type="text" id="owner_name" name="owner_name" required>
+                            </div>
+                            <div class="form-row">
+                                <label>State:</label>
+                                <input type="text" id="business_state" name="business_state" required>
+                            </div>
+                            <div class="form-row">
+                                <label>City:</label>
+                                <input type="text" id="business_city" name="business_city" required>
+                            </div>
+                            <div class="form-row">
+                                <label>Permit Number:</label>
+                                <input type="text" id="permit_number" name="permit_number">
+                            </div>
+                            <div class="form-row">
+                                <label>Local Registration Number:</label>
+                                <input type="text" id="business_local_reg_num" name="business_local_reg_num">
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Submit Business Permit</button>
                     </form>
                 </section>
                 <section class="preview-section">
