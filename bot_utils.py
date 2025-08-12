@@ -4,6 +4,7 @@ import sys
 from io import BytesIO
 import discord
 from dotenv import load_dotenv
+import time
 
 # Load environment variables
 load_dotenv()
