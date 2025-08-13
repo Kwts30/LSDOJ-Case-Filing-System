@@ -375,24 +375,32 @@
                         <div class="form-block">
                             <h3>Business Information</h3>
                             <div class="form-row">
+                                <label>Date Issued:</label>
+                                <input type="date" id="date_issued" name="date_issued" required>
+                            </div>
+                            <div class="form-row">
+                                <label>Classification:</label>
+                                <input type="text" id="classification" name="classification" placeholder="e.g. NEW/RENEWAL" required>
+                            </div>
+                            <div class="form-row">
+                                <label>Business Identification Number:</label>
+                                <input type="text" id="business_id_number" name="business_id_number" required>
+                            </div>
+                            <div class="form-row">
                                 <label>Business Name:</label>
                                 <input type="text" id="business_name" name="business_name" required>
                             </div>
                             <div class="form-row">
-                                <label>Owner Name:</label>
-                                <input type="text" id="owner_name" name="owner_name" required>
+                                <label>Date Expiration:</label>
+                                <input type="date" id="date_expiration" name="date_expiration" required>
                             </div>
                             <div class="form-row">
-                                <label>State:</label>
-                                <input type="text" id="business_state" name="business_state" required>
-                            </div>
-                            <div class="form-row">
-                                <label>City:</label>
-                                <input type="text" id="business_city" name="business_city" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Permit Number:</label>
+                                <label>Permit No:</label>
                                 <input type="text" id="permit_number" name="permit_number">
+                            </div>
+                            <div class="form-row">
+                                <label>Permit Year:</label>
+                                <input type="text" id="permit_year" name="permit_year" placeholder="2025" required>
                             </div>
                             <div class="form-row">
                                 <label>Local Registration Number:</label>
@@ -404,6 +412,11 @@
                 </section>
                 <section class="preview-section">
                     <h2>Document Preview</h2>
+                    <div class="zoom-control">
+                        <label for="zoom-range">Zoom:</label>
+                        <input type="range" id="zoom-range" min="40" max="120" value="100">
+                        <span id="zoom-value">100%</span>
+                    </div>
                     <div id="preview-container">
                         <canvas id="preview-canvas"></canvas>
                     </div>
@@ -441,7 +454,7 @@
             </div>
             <div class="modal-body">
                 <div class="success-icon">✓</div>
-                <p id="success-message">The Document has been successfully processed and sent to Discord.</p>
+                <p id="success-message">The document image has been generated and downloaded.</p>
                 <p class="success-details">You can now close this window</p>
             </div>
             <div class="modal-footer">

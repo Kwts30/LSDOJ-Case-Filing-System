@@ -1,6 +1,6 @@
-# DOJ Auto-Fillup System
+# DOJ Auto-Fillup System (Pure Frontend Edition)
 
-An all-in-one web-based document management and auto-fillup system for DOJ paperwork, designed for FiveM servers (such as Ruthless). This project was created by KWTS for hobby and personal use, but is open to collaboration and improvement!
+A lightweight, fully client-side (no backend required) auto-fill generator for DOJ-style documents used in FiveM roleplay servers. Generates high-resolution PNG images directly in the browser.
 
 ## Table of Contents
 
@@ -9,8 +9,7 @@ An all-in-one web-based document management and auto-fillup system for DOJ paper
 - [Demo/Screenshots](#demoscreenshots)
 - [Folder Structure](#folder-structure)
 - [Getting Started](#getting-started)
-  - [Frontend Setup](#frontend-setup)
-  - [Backend Setup (Optional: Discord Integration)](#backend-setup-optional-discord-integration)
+   - [Quick Use](#quick-use)
 - [Usage](#usage)
 - [Technologies Used](#technologies-used)
 - [Contributing](#contributing)
@@ -21,22 +20,21 @@ An all-in-one web-based document management and auto-fillup system for DOJ paper
 
 ## Project Overview
 
-The DOJ Auto-Fillup System is a browser-based tool for managing and editing DOJ documents with live preview, supporting image-based document templates and optional Discord integration for automated notifications and submissions.
+This edition of the tool is 100% static: open `index.html` and start generating documents. All rendering and image exporting happen locally using an HTML5 `<canvas>`. No data leaves your machine.
 
-**Main Use Case:**  
-Admins and users on a FiveM DOJ RP server can quickly generate, edit, and share official-looking documents, either as standalone images or with Discord bot integration.
+**Use Case:** Rapid creation of official-themed documents (Birth Certificate, Marriage Certificate, Business Permit) for RP scenarios.
 
 ---
 
 ## Features
 
-- Live image-based document editing (visual drag-and-drop fields)
-- Upload custom document template images
-- Export completed documents as images or PDFs
-- (Optional) Discord bot integration for automated document sharing/notifications
-- Simple, modern web UI (HTML, CSS, JavaScript)
-- Lightweight Python FastAPI backend (only needed for Discord integration)
-- Easy, folder-based organization of templates and generated files
+- Live preview while typing
+- High-resolution (2480x3508) PNG export
+- Three document types: Birth, Marriage, Business Permit
+- Works offline / no server required
+- Clean filename generation (sanitized)
+- Fallback handling for missing business permit template
+- Simple, single-folder deployment (GitHub Pages friendly)
 
 ---
 
@@ -54,73 +52,54 @@ Admins and users on a FiveM DOJ RP server can quickly generate, edit, and share 
 
 ## Folder Structure
 
-- `frontend/` — Website UI (HTML, CSS, JS)
-- `backend/` — Python backend for Discord integration (not needed for image-only editing)
-- `templates/` — Old document templates (PDF/DOCX) — can be deleted if not needed
-- `generated/` — Old generated PDFs — can be deleted
-- `data/` — Old counters and respondents — can be deleted
-
-### Minimal Install (Image-Only)
-Keep:
-- `frontend/`
-- `backend/` (only if you want Discord integration)
-
-Safe to Delete:
-- `templates/`
-- `generated/`
-- `data/`
-- `requirements.txt` (if not using backend)
-- `ngrok.exe` (if not using backend)
+Root contains:
+- `index.html` – main UI
+- `style.css` – styling
+- `script.js` – canvas rendering & download logic
+- `assets/` – certificate background images
+- `README.md` – this file
+ 
 
 ---
 
 ## Getting Started
 
-### Frontend Setup
+### Quick Use
 
-1. Open `frontend/index.html` in your browser  
-   _Or_ use a local server (like the "Live Server" extension in VSCode) for best results.
+1. Clone or download the repository.
+2. Open `index.html` in any modern browser (Chrome, Firefox, Edge, Safari).
+3. Fill out a form (Birth / Marriage / Business).
+4. Watch the live preview update.
+5. Press Submit to download a PNG.
 
-### Backend Setup (Optional: Discord Integration)
+Optional: Use a lightweight static server (improves image caching):
 
-1. Make sure Python is installed.
-2. Install dependencies:
-   ```bash
-   pip install fastapi uvicorn discord.py
-   ```
-3. Open a terminal and navigate to the backend folder:
-   ```bash
-   cd backend
-   ```
-4. Start the FastAPI server:
-   ```bash
-   uvicorn app:fastapi_app --reload
-   ```
-   - `app` is the filename (`app.py`)
-   - `fastapi_app` is the FastAPI instance in the file
-   - `--reload` enables auto-reload on code changes
+```bash
+# Python 3 (if installed)
+python -m http.server 8080
 
-5. Configure your Discord bot token and settings in the backend as needed.
+# Node (if installed)
+npx serve .
+```
+Then open http://localhost:8080
 
 ---
 
 ## Usage
 
-1. Open `frontend/index.html` in your browser.
-2. Upload your document template image.
-3. Drag-and-drop to edit fields live on the canvas.
-4. Export or save the completed document.
-5. (Optional) If the backend is running, use the Discord integration features for auto-sharing documents.
+1. Open `index.html`.
+2. Choose a document type via the sidebar.
+3. Enter data; the preview updates automatically.
+4. Submit the form to trigger a download of the rendered PNG.
+5. Repeat or switch document types as needed.
 
 ---
 
 ## Technologies Used
 
-- HTML, CSS, JavaScript (Frontend UI)
-- Python 3.x (Backend)
-- FastAPI (Backend web server)
-- Discord.py (Discord bot integration)
-- [Other dependencies as needed]
+- HTML5 + CSS3 + Vanilla JavaScript
+- Canvas 2D API
+- (Removed) Python / FastAPI / Discord.py (no longer required in this edition)
 
 ---
 
@@ -139,12 +118,18 @@ Please open an issue or pull request for suggestions, bugfixes, or new features.
 
 ## Support
 
-- For questions or support, open an issue in this repository.
-- You can also contact me (KWTS) via GitHub or Discord if you need help setting up.
+- Open an issue for bugs or feature requests.
+- Ideas welcome for: PDF export, localStorage persistence, custom template upload.
 
 ---
 
 ## License
 
-This project is for hobby and personal use.  
-You are free to use, modify, and share it — but please credit the original author (KWTS) and do not use it commercially without permission.
+This project is for hobby and personal use. You are free to use, modify, and share it — but please credit the original author (KWTS) and do not use it commercially without permission.
+
+---
+
+### Changelog (Frontend Edition)
+- Removed all backend Python/Discord code (app.py, bot_utils.py)
+- Simplified README for static deployment
+- Ensured download-only workflow

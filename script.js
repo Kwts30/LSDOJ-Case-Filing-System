@@ -1,6 +1,6 @@
-// Removed remote API & Discord submission; now all certificates download locally as images.
+// Local-only certificate generator & downloader (no backend required)
 
-// Modal elements
+// Modal elements (some retained for UX)
 const loadingModal = document.getElementById('loading-modal');
 const successModal = document.getElementById('success-modal');
 const cancelButton = document.getElementById('cancel-button');
@@ -8,351 +8,375 @@ const doneButton = document.getElementById('done-button');
 const errorModal = document.getElementById('error-modal');
 const closeErrorButton = document.getElementById('close-error-button');
 const errorMessage = document.getElementById('error-message');
-let currentRequest = null;
 
-// Show loading modal
-function showLoadingModal() {
-    loadingModal.classList.add('show');
+function showSuccessModal(msg) {
+    if (msg) document.getElementById('success-message').textContent = msg;
+    successModal?.classList.add('show');
+}
+function hideSuccessModal() { successModal?.classList.remove('show'); }
+function showErrorModal(msg) { if (msg) errorMessage.textContent = msg; errorModal?.classList.add('show'); }
+function hideErrorModal() { errorModal?.classList.remove('show'); }
+cancelButton?.addEventListener('click', () => loadingModal?.classList.remove('show'));
+doneButton?.addEventListener('click', hideSuccessModal);
+closeErrorButton?.addEventListener('click', hideErrorModal);
+
+// Polyfill for canvas.toBlob (older Safari / legacy)
+if (!HTMLCanvasElement.prototype.toBlob) {
+    HTMLCanvasElement.prototype.toBlob = function (cb, type, quality) {
+        const dataURL = this.toDataURL(type, quality);
+        const binStr = atob(dataURL.split(',')[1]);
+        const len = binStr.length;
+        const arr = new Uint8Array(len);
+        for (let i = 0; i < len; i++) arr[i] = binStr.charCodeAt(i);
+        cb(new Blob([arr], { type: type || 'image/png' }));
+    };
 }
 
-// Hide loading modal
-function hideLoadingModal() {
-    loadingModal.classList.remove('show');
+// Helpers
+function buildFileName(prefix, parts) {
+    const cleaned = parts.map(p => (p || '').trim() || 'NA');
+    const base = [prefix, ...cleaned].join('_');
+    return base.replace(/[^a-zA-Z0-9_\-]+/g, '_') + '.png';
 }
 
-// Show success modal
-function showSuccessModal() {
-    successModal.classList.add('show');
-}
-
-// Hide success modal
-function hideSuccessModal() {
-    successModal.classList.remove('show');
-}
-
-function showErrorModal(message) {
-    errorMessage.textContent = message;
-    errorModal.classList.add('show');
-}
-
-function hideErrorModal() {
-    errorModal.classList.remove('show');
-}
-
-// Event listeners for modal buttons
-cancelButton.addEventListener('click', () => {
-    if (currentRequest) {
-        currentRequest.abort();
-        currentRequest = null;
-    }
-    hideLoadingModal();
-});
-
-doneButton.addEventListener('click', () => {
-    hideSuccessModal();
-});
-
-closeErrorButton.addEventListener('click', hideErrorModal);
-
-document.getElementById('birth-certificate-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    // Ensure preview is up to date
-    drawPreview();
-    const canvas = document.getElementById('preview-canvas');
-    const first = document.getElementById('name_first').value || 'First';
-    const last = document.getElementById('name_last').value || 'Last';
-    const fileName = `birth_certificate_${first}_${last}.png`.replace(/\s+/g, '_');
+function downloadCanvas(canvas, filename) {
     canvas.toBlob(blob => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-        document.getElementById('success-message').textContent = 'Birth certificate image downloaded.';
-        showSuccessModal();
+        if (!blob) {
+            showErrorModal('Could not generate image.');
+            return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        if (typeof a.download === 'undefined') {
+            // Fallback: open in new tab
+            window.open(url, '_blank');
+        } else {
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        URL.revokeObjectURL(url);
     }, 'image/png');
-});
+}
 
-const form = document.getElementById('birth-certificate-form');
+// Canvas & templates
+const birthForm = document.getElementById('birth-certificate-form');
+const marriageForm = document.getElementById('marriage-certificate-form');
+const businessForm = document.getElementById('business-permit-form');
 const canvas = document.getElementById('preview-canvas');
 const ctx = canvas.getContext('2d');
+const zoomRange = document.getElementById('zoom-range');
+const zoomValue = document.getElementById('zoom-value');
+const previewContainer = document.getElementById('preview-container');
 
-// High-quality resolution for A4 at 300dpi: 2480x3508px
-const TEMPLATE_WIDTH = 2480; // actual image width
-const TEMPLATE_HEIGHT = 3508; // actual image height
-const PREVIEW_WIDTH = 600; // preview width for display
-const PREVIEW_HEIGHT = 850; // preview height for display
-const SCALE_X = TEMPLATE_WIDTH / PREVIEW_WIDTH;
-const SCALE_Y = TEMPLATE_HEIGHT / PREVIEW_HEIGHT;
+// Limited Edition tracking
+let isLimitedEdition = false;
 
-const previewImage = new window.Image();
-previewImage.src = 'assets/birthcert.png';
+const TEMPLATE_WIDTH = 2480; // base (portrait A4) internal canvas size
+const TEMPLATE_HEIGHT = 3508;
+// Business permit is landscape oriented
+const BUSINESS_TEMPLATE_WIDTH = 3508; // landscape width (rotated)
+const BUSINESS_TEMPLATE_HEIGHT = 2480; // landscape height (rotated)
+let PREVIEW_WIDTH = 600;
+let PREVIEW_HEIGHT = 850;
+let SCALE_X = TEMPLATE_WIDTH / PREVIEW_WIDTH;
+let SCALE_Y = TEMPLATE_HEIGHT / PREVIEW_HEIGHT;
 
-// Add marriage certificate preview image
-const marriagePreviewImage = new window.Image();
-marriagePreviewImage.src = 'assets/marriagecert.png';
+canvas.width = TEMPLATE_WIDTH;
+canvas.height = TEMPLATE_HEIGHT;
 
-// Business permit preview image (placeholder - user should add actual template as assets/businesspermit.png)
-const businessPreviewImage = new window.Image();
-businessPreviewImage.src = 'assets/businesspermit.png';
+// Will be updated by drawPreview() based on certificate type
 
-// Track current certificate type
+const birthImage = new Image();
+birthImage.src = 'assets/birthcert.png';
+const marriageImage = new Image();
+marriageImage.src = 'assets/marriagecert.png';
+const businessImage = new Image();
+// actual filename has a space: business permit.png
+businessImage.src = 'assets/business permit.png';
+const businessImageLE = new Image();
+// Limited Edition business permit
+businessImageLE.src = 'assets/business permitLE.png';
+businessImage.onerror = () => { console.warn('business permit template missing, fallback to birthcert'); businessImage.src = 'assets/birthcert.png'; };
+businessImageLE.onerror = () => { console.warn('Limited Edition business permit template missing, using regular version'); };
+
+// Zoom handling (scale the preview container only; underlying full-res canvas stays same)
+function applyZoom() {
+    const z = parseInt(zoomRange?.value || '100', 10);
+    if (zoomValue) zoomValue.textContent = z + '%';
+    if (previewContainer) {
+        const scale = z / 100;
+        previewContainer.style.transform = `scale(${scale})`;
+        if (!previewContainer.classList.contains('business-wide')) {
+            previewContainer.style.width = '600px';
+            previewContainer.style.height = '800px';
+        }
+    }
+}
+zoomRange?.addEventListener('input', applyZoom);
+applyZoom();
+
 let currentCertificateType = 'birth';
 
-// Handle sidebar button clicks
-document.querySelectorAll('.sidebar-menu button').forEach(button => {
-    button.addEventListener('click', () => {
-        // Update active button
-        document.querySelectorAll('.sidebar-menu button').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-
-        // Show/hide appropriate form
-        if (button.textContent === 'Marriage Certificate') {
-            document.getElementById('birth-certificate-section').style.display = 'none';
-            document.getElementById('marriage-certificate-section').style.display = 'block';
-            document.getElementById('business-permit-section').style.display = 'none';
-            currentCertificateType = 'marriage';
-            previewImage.src = 'assets/marriagecert.png';
-        } else if (button.textContent === 'Business Permit') {
-            document.getElementById('birth-certificate-section').style.display = 'none';
-            document.getElementById('marriage-certificate-section').style.display = 'none';
-            document.getElementById('business-permit-section').style.display = 'block';
-            currentCertificateType = 'business';
-            previewImage.src = 'assets/businesspermit.png';
-        } else {
-            document.getElementById('birth-certificate-section').style.display = 'block';
-            document.getElementById('marriage-certificate-section').style.display = 'none';
-            document.getElementById('business-permit-section').style.display = 'none';
-            currentCertificateType = 'birth';
-            previewImage.src = 'assets/birthcert.png';
-        }
-        // Wait for the new image to load before drawing
-        previewImage.onload = () => {
-            drawPreview();
-        };
+document.querySelectorAll('.sidebar-menu button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-menu button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const text = btn.textContent?.trim();
+        document.getElementById('birth-certificate-section').style.display = (text === 'Birth Certificate') ? 'block' : 'none';
+        document.getElementById('marriage-certificate-section').style.display = (text === 'Marriage Certificate') ? 'block' : 'none';
+        document.getElementById('business-permit-section').style.display = (text === 'Business Permit') ? 'block' : 'none';
+        currentCertificateType = text === 'Marriage Certificate' ? 'marriage' : text === 'Business Permit' ? 'business' : 'birth';
+        drawPreview();
     });
 });
 
-// Load both images initially
-previewImage.onload = () => {
-    canvas.width = TEMPLATE_WIDTH;
-    canvas.height = TEMPLATE_HEIGHT;
-    drawPreview();
-};
-
-marriagePreviewImage.onload = () => {
-    console.log('Marriage certificate template loaded');
-};
-
-businessPreviewImage.onload = () => {
-    console.log('Business permit template loaded');
-};
-
-form.addEventListener('input', drawPreview);
-document.getElementById('marriage-certificate-form').addEventListener('input', drawPreview);
-document.getElementById('business-permit-form').addEventListener('input', drawPreview);
-
-drawPreview(); // Show placeholders on load
+// Live preview
+[birthForm, marriageForm, businessForm].forEach(f => f?.addEventListener('input', drawPreview));
+birthImage.onload = () => drawPreview();
+marriageImage.onload = () => drawPreview();
+businessImage.onload = () => drawPreview();
+businessImageLE.onload = () => drawPreview();
 
 function drawPreview() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw the appropriate template
-    if (currentCertificateType === 'marriage') {
-        ctx.drawImage(marriagePreviewImage, 0, 0, TEMPLATE_WIDTH, TEMPLATE_HEIGHT);
+    // dynamic preview scaling (business permit landscape toggle)
+    if (currentCertificateType === 'business') {
+        // Use scaled down business permit dimensions for preview
+        PREVIEW_WIDTH = 1000; // Reduced from original for better viewing
+        PREVIEW_HEIGHT = 700; // Reduced proportionally for landscape
+        // Set canvas to landscape dimensions for business permit
+        canvas.width = BUSINESS_TEMPLATE_WIDTH;
+        canvas.height = BUSINESS_TEMPLATE_HEIGHT;
+        SCALE_X = BUSINESS_TEMPLATE_WIDTH / PREVIEW_WIDTH; // Scale for preview
+        SCALE_Y = BUSINESS_TEMPLATE_HEIGHT / PREVIEW_HEIGHT; // Scale for preview
     } else {
-        ctx.drawImage(previewImage, 0, 0, TEMPLATE_WIDTH, TEMPLATE_HEIGHT);
+        PREVIEW_WIDTH = 600;
+        PREVIEW_HEIGHT = 800;
+        canvas.width = TEMPLATE_WIDTH;
+        canvas.height = TEMPLATE_HEIGHT;
+        SCALE_X = TEMPLATE_WIDTH / PREVIEW_WIDTH;
+        SCALE_Y = TEMPLATE_HEIGHT / PREVIEW_HEIGHT;
+    }
+    
+    if (previewContainer && !previewContainer.classList.contains('business-wide')) {
+        // ensure default size for non-business after switching back
+        previewContainer.style.width = PREVIEW_WIDTH + 'px';
+        previewContainer.style.height = PREVIEW_HEIGHT + 'px';
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let template;
+    if (currentCertificateType === 'marriage') {
+        template = marriageImage;
+    } else if (currentCertificateType === 'business') {
+        template = isLimitedEdition ? businessImageLE : businessImage;
+    } else {
+        template = birthImage;
+    }
+    
+    if (currentCertificateType === 'business') {
+        // Draw business permit in landscape format
+        ctx.drawImage(template, 0, 0, BUSINESS_TEMPLATE_WIDTH, BUSINESS_TEMPLATE_HEIGHT);
+    } else {
+        // Draw other certificates in portrait format
+        ctx.drawImage(template, 0, 0, TEMPLATE_WIDTH, TEMPLATE_HEIGHT);
+    }
+    
+    // Adjust container width for business permit
+    if (previewContainer) {
+        if (currentCertificateType === 'business') previewContainer.classList.add('business-wide');
+        else previewContainer.classList.remove('business-wide');
     }
 
     if (currentCertificateType === 'birth') {
-        // Birth certificate fields
         const fields = [
-            { id: 'state_file_num', x: 75, y: 229, placeholder: 'SFN', fontStyle: 'bold' },
-            { id: 'local_reg_num', x: 460, y: 229, placeholder: 'LRN', fontStyle: 'bold' },
-            { id: 'name_first', x: 80, y: 384, placeholder: 'First Name of Child' },
-            { id: 'name_middle', x: 245, y: 384, placeholder: 'Middle Name of Child' },
-            { id: 'name_last', x: 405, y: 384, placeholder: 'Last Name of Child' },
-            { id: 'sex', x: 80, y: 405, placeholder: 'Sex' },
-            { id: 'birth_type', x: 135, y: 405, placeholder: 'Type of Birth' },
-            { id: 'birth_weight', x: 245, y: 405, placeholder: 'multiple child' },
-            { id: 'date_birth', x: 405, y: 405, placeholder: 'date of birth' },
-            { id: 'birth_time', x: 499, y: 405, placeholder: 'Time of Birth' },
-            { id: 'birth_place', x: 80, y: 427, placeholder: 'Hospital or Facility Name' },
-            { id: 'birth_address', x: 325, y: 427, placeholder: 'Street Address' },
-            { id: 'birth_city', x: 80, y: 450, placeholder: 'City' },
-            { id: 'birth_state', x: 325, y: 450, placeholder: 'State' },
-            { id: 'mother_name', x: 80, y: 472, placeholder: 'First Name of Mother' },
-            { id: 'mother_middle', x: 245, y: 472, placeholder: 'Middle Name' },
-            { id: 'mother_last', x: 345, y: 472, placeholder: 'Last Name' },
-            { id: 'mother_birth', x: 545, y: 470, placeholder: 'DOB', fontSize: '24px' },
-            { id: 'mother_bop', x: 455, y: 472, placeholder: 'Mother BOP' },
-            { id: 'father_name', x: 80, y: 492, placeholder: 'First Name of Father' },
-            { id: 'father_middle', x: 245, y: 492, placeholder: 'Middle Name' },
-            { id: 'father_last', x: 345, y: 492, placeholder: 'Last Name' },
-            { id: 'father_bop', x: 455, y: 492, placeholder: 'Father BOP' },
-            { id: 'father_birth', x: 545, y: 492, placeholder: 'DOB', fontSize: '24px' },
-            { id: 'issuer_name', x: 80, y: 515, placeholder: 'Full Name of Issuer' },
-            { id: 'issuer_occupation', x: 245, y: 515, placeholder: 'Occupation' },
-            { id: 'issuer_signature', x: 345, y: 515, placeholder: 'Issuer Signature', fontFamily: 'Segoe Script', fontStyle: 'italic', fontStyle: 'bold' },
-            { id: 'registration_date', x: 455, y: 515, placeholder: 'Date of Registration' },
+            { id: 'state_file_num', x: 75, y: 218, placeholder: 'SFN', fontStyle: 'bold', fontSize: '50px' },
+            { id: 'local_reg_num', x: 460, y: 218, placeholder: 'LRN', fontStyle: 'bold', fontSize: '50px' },
+            { id: 'name_first', x: 80, y: 360, placeholder: 'First Name of Child', fontSize: '50px' },
+            { id: 'name_middle', x: 245, y: 360, placeholder: 'Middle Name', fontSize: '50px' },
+            { id: 'name_last', x: 405, y: 360, placeholder: 'Last Name', fontSize: '50px' },
+            { id: 'sex', x: 80, y: 380, placeholder: 'Sex', fontSize: '50px' },
+            { id: 'birth_type', x: 135, y: 380, placeholder: 'Birth Type' },
+            { id: 'birth_weight', x: 245, y: 380, placeholder: 'Multiple Child' },
+            { id: 'date_birth', x: 405, y: 380, placeholder: 'Birth Date' },
+            { id: 'birth_time', x: 499, y: 380, placeholder: 'Time' },
+            { id: 'birth_place', x: 80, y: 402, placeholder: 'Facility' },
+            { id: 'birth_address', x: 325, y: 402, placeholder: 'Address' },
+            { id: 'birth_city', x: 80, y: 423, placeholder: 'City' },
+            { id: 'birth_state', x: 325, y: 423, placeholder: 'State' },
+            { id: 'mother_name', x: 80, y: 443, placeholder: 'Mother First' },
+            { id: 'mother_middle', x: 245, y: 443, placeholder: 'M' },
+            { id: 'mother_last', x: 345, y: 443, placeholder: 'Mother Last' },
+            { id: 'mother_bop', x: 455, y: 443, placeholder: 'Mother BOP' },
+            { id: 'mother_birth', x: 545, y: 443, placeholder: 'DOB', fontSize: '24px' },
+            { id: 'father_name', x: 80, y: 462, placeholder: 'Father First' },
+            { id: 'father_middle', x: 245, y: 462, placeholder: 'M' },
+            { id: 'father_last', x: 345, y: 462, placeholder: 'Father Last' },
+            { id: 'father_bop', x: 455, y: 462, placeholder: 'Father BOP' },
+            { id: 'father_birth', x: 545, y: 462, placeholder: 'DOB', fontSize: '24px' },
+            { id: 'issuer_name', x: 80, y: 483, placeholder: 'Issuer' },
+            { id: 'issuer_occupation', x: 245, y: 483, placeholder: 'Occupation' },
+            { id: 'issuer_signature', x: 345, y: 483, placeholder: 'Signature', fontFamily: 'Segoe Script', fontStyle: 'italic bold' },
+            { id: 'registration_date', x: 455, y: 483, placeholder: 'Reg Date' }
         ];
-
-        fields.forEach(field => {
-            let value = document.getElementById(field.id)?.value;
-            if (!value) value = field.placeholder;
-
-            // Set font properties
-            let fontString = '';
-            
-            // Add font style if specified
-            if (field.fontStyle) {
-                fontString += field.fontStyle + ' ';
-            }
-            
-            // Add font size
-            if (field.fontSize) {
-                fontString += field.fontSize + ' ';
-            } else {
-                fontString += '48px ';
-            }
-            
-            // Add font family
-            if (field.fontFamily) {
-                fontString += field.fontFamily;
-            } else {
-                fontString += 'times-new-roman';
-            }
-            
-            ctx.font = fontString;
-
-            // Scale the coordinates for high resolution
-            const scaledX = field.x * SCALE_X;
-            const scaledY = field.y * SCALE_Y;
-
-            ctx.fillText(value, scaledX, scaledY);
-        });
+        renderFields(fields);
     } else if (currentCertificateType === 'marriage') {
-        // Marriage certificate fields (all from template, placeholder coordinates)
         const fields = [
             { id: 'marriage_state_file_num', x: 75, y: 229, placeholder: 'SFN', fontStyle: 'bold' },
             { id: 'marriage_local_reg_num', x: 460, y: 229, placeholder: 'LRN', fontStyle: 'bold' },
             { id: 'groom_first', x: 93, y: 328, placeholder: 'Groom First' },
-            { id: 'groom_middle', x: 220, y: 328, placeholder: 'Groom Middle' },
+            { id: 'groom_middle', x: 220, y: 328, placeholder: 'M' },
             { id: 'groom_last', x: 348, y: 328, placeholder: 'Groom Last' },
             { id: 'groom_dob', x: 472, y: 328, placeholder: 'DOB' },
-            { id: 'groom_address', x: 93, y: 349, placeholder: 'Groom Residence' },
-            { id: 'groom_city', x: 265, y: 349, placeholder: 'Groom City' },
-            { id: 'groom_birthplace', x: 374, y: 349, placeholder: 'Groom statebirth' },
-            { id: 'groom_marriages', x: 471, y: 349, placeholder: 'Groom Marriages' },
-            { id: 'groom_occupation', x: 93, y: 370, placeholder: 'Groom Occupation' },
-            { id: 'groom_business', x: 265, y: 370, placeholder: 'Groom Business' },
-            { id: 'groom_education', x: 435, y: 370, placeholder: 'Groom Education' },
-            { id: 'groom_parent1', x: 93, y: 390, placeholder: 'Groom Parent 1' },
+            { id: 'groom_address', x: 93, y: 349, placeholder: 'Address' },
+            { id: 'groom_city', x: 265, y: 349, placeholder: 'City' },
+            { id: 'groom_birthplace', x: 374, y: 349, placeholder: 'Birth State' },
+            { id: 'groom_marriages', x: 471, y: 349, placeholder: '#Mar' },
+            { id: 'groom_occupation', x: 93, y: 370, placeholder: 'Occupation' },
+            { id: 'groom_business', x: 265, y: 370, placeholder: 'Business' },
+            { id: 'groom_education', x: 435, y: 370, placeholder: 'Edu' },
+            { id: 'groom_parent1', x: 93, y: 390, placeholder: 'Parent1' },
             { id: 'groom_parent1_birthplace', x: 250, y: 390, placeholder: 'Birthplace' },
-            { id: 'groom_parent2', x: 330, y: 390, placeholder: 'Groom Parent 2' },
+            { id: 'groom_parent2', x: 330, y: 390, placeholder: 'Parent2' },
             { id: 'groom_parent2_birthplace', x: 483, y: 390, placeholder: 'Birthplace' },
             { id: 'bride_first', x: 93, y: 410, placeholder: 'Bride First' },
-            { id: 'bride_middle', x: 220, y: 410, placeholder: 'Bride Middle' },
+            { id: 'bride_middle', x: 220, y: 410, placeholder: 'M' },
             { id: 'bride_last', x: 348, y: 410, placeholder: 'Bride Last' },
-            { id: 'bride_dob', x: 472, y: 410, placeholder: 'Bride DOB' },
-            { id: 'bride_address', x: 93, y: 430, placeholder: 'Bride Address' },
-            { id: 'bride_city', x: 265, y: 430, placeholder: 'Bride City' },
-            { id: 'bride_birthplace', x: 374, y: 430, placeholder: 'Bride statebirth' },
-            { id: 'bride_marriages', x: 471, y: 430, placeholder: 'Bride Marriages' },
-            { id: 'bride_occupation', x: 93, y: 450, placeholder: 'Bride Occupation' },
-            { id: 'bride_business', x: 265, y: 450, placeholder: 'Bride Business' },
-            { id: 'bride_education', x: 435, y: 450, placeholder: 'Bride Education' },
-            { id: 'bride_parent1', x: 93, y: 472, placeholder: 'Bride Parent 1' },
+            { id: 'bride_dob', x: 472, y: 410, placeholder: 'DOB' },
+            { id: 'bride_address', x: 93, y: 430, placeholder: 'Address' },
+            { id: 'bride_city', x: 265, y: 430, placeholder: 'City' },
+            { id: 'bride_birthplace', x: 374, y: 430, placeholder: 'Birth State' },
+            { id: 'bride_marriages', x: 471, y: 430, placeholder: '#Mar' },
+            { id: 'bride_occupation', x: 93, y: 450, placeholder: 'Occupation' },
+            { id: 'bride_business', x: 265, y: 450, placeholder: 'Business' },
+            { id: 'bride_education', x: 435, y: 450, placeholder: 'Edu' },
+            { id: 'bride_parent1', x: 93, y: 472, placeholder: 'Parent1' },
             { id: 'bride_parent1_birthplace', x: 250, y: 472, placeholder: 'Birthplace' },
-            { id: 'bride_parent2', x: 330, y: 472, placeholder: 'Bride Parent 2' },
+            { id: 'bride_parent2', x: 330, y: 472, placeholder: 'Parent2' },
             { id: 'bride_parent2_birthplace', x: 483, y: 472, placeholder: 'Birthplace' },
-            { id: 'groom_signature', x: 98, y: 513, placeholder: 'Groom Signature', fontFamily: 'Segoe Script', fontStyle: 'italic', fontStyle: 'bold'},
-            { id: 'bride_signature', x: 335, y: 513, placeholder: 'Bride Signature', fontFamily: 'Segoe Script', fontStyle: 'italic', fontStyle: 'bold'},
+            { id: 'groom_signature', x: 98, y: 513, placeholder: 'Groom Sig', fontFamily: 'Segoe Script', fontStyle: 'italic bold' },
+            { id: 'bride_signature', x: 335, y: 513, placeholder: 'Bride Sig', fontFamily: 'Segoe Script', fontStyle: 'italic bold' },
             { id: 'marriage_date', x: 93, y: 533, placeholder: 'Date' },
-            { id: 'marriage_place', x: 257, y: 533, placeholder: 'place' },
+            { id: 'marriage_place', x: 257, y: 533, placeholder: 'Place' },
             { id: 'marriage_city', x: 408, y: 533, placeholder: 'City' },
             { id: 'marriage_state', x: 487, y: 533, placeholder: 'State' },
-            { id: 'officiant_name', x: 93, y: 556, placeholder: 'Officiant Name' },
-            { id: 'officiant_occupation', x: 339, y: 556, placeholder: 'Officiant Occupation' },
-            { id: 'witness1_signature', x: 100, y: 576, placeholder: 'Witness 1 Signature', fontFamily: 'Segoe Script', fontStyle: 'italic', fontStyle: 'bold'},
-            { id: 'witness1_name', x: 330, y: 576, placeholder: 'Witness 1 Name' },
-            { id: 'witness2_signature', x: 100, y: 598, placeholder: 'Witness 2 Signature', fontFamily: 'Segoe Script', fontStyle: 'italic', fontStyle: 'bold'},
-            { id: 'witness2_name', x: 330, y: 598, placeholder: 'Witness 2 Name' },
+            { id: 'officiant_name', x: 93, y: 556, placeholder: 'Officiant' },
+            { id: 'officiant_occupation', x: 339, y: 556, placeholder: 'Occ' },
+            { id: 'witness1_signature', x: 100, y: 576, placeholder: 'W1 Sig', fontFamily: 'Segoe Script', fontStyle: 'italic bold' },
+            { id: 'witness1_name', x: 330, y: 576, placeholder: 'W1 Name' },
+            { id: 'witness2_signature', x: 100, y: 598, placeholder: 'W2 Sig', fontFamily: 'Segoe Script', fontStyle: 'italic bold' },
+            { id: 'witness2_name', x: 330, y: 598, placeholder: 'W2 Name' }
+        ];
+        renderFields(fields);
+    } else if (currentCertificateType === 'business') {
+        // Landscape coordinates for business permit
+        // Center the Business Name text horizontally while keeping other fields normal
+        // Other fields remain left-aligned via renderFields
+        const fields = [
+            // Top metadata (left side of landscape)
+            { id: 'date_issued', x: 225, y: 39, placeholder: 'Date Issued', fontSize: '50px' },
+            { id: 'date_expiration', x: 240, y: 510, placeholder: 'Date Expiration', fontSize: '70px' },
+            { id: 'classification', x: 225, y: 62, placeholder: 'Classification', fontSize: '50px' },
+            { id: 'business_id_number', x: 225, y: 85, placeholder: 'Business ID #', fontSize: '50px' },
+            // Top metadata (right side of landscape)
+            { id: 'permit_number', x: 750, y: 39, placeholder: 'Permit No', fontSize: '50px' },
+            { id: 'permit_year', x: 750, y: 62, placeholder: 'Year', fontSize: '50px' },
         ];
 
-        fields.forEach(field => {
-            let value = document.getElementById(field.id)?.value;
-            if (!value) value = field.placeholder;
-            let fontString = '';
-            if (field.fontStyle) fontString += field.fontStyle + ' ';
-            if (field.fontSize) fontString += field.fontSize + ' '; else fontString += '48px ';
-            if (field.fontFamily) fontString += field.fontFamily; else fontString += 'times-new-roman';
-            ctx.font = fontString;
-            const scaledX = field.x * SCALE_X;
-            const scaledY = field.y * SCALE_Y;
-            ctx.fillText(value, scaledX, scaledY);
-        });
-    } else if (currentCertificateType === 'business') {
-        // Business permit fields - placeholder coordinates; adjust once template is finalized
-        const fields = [
-            { id: 'business_name', x: 120, y: 300, placeholder: 'Business Name' },
-            { id: 'owner_name', x: 120, y: 340, placeholder: 'Owner Name' },
-            { id: 'business_state', x: 120, y: 380, placeholder: 'State' },
-            { id: 'business_city', x: 300, y: 380, placeholder: 'City' },
-            { id: 'permit_number', x: 120, y: 420, placeholder: 'Permit #' },
-            { id: 'business_local_reg_num', x: 300, y: 420, placeholder: 'Local Reg #' }
-        ];
-        fields.forEach(field => {
-            let value = document.getElementById(field.id)?.value;
-            if (!value) value = field.placeholder;
-            let fontString = '48px times-new-roman';
-            ctx.font = fontString;
-            const scaledX = field.x * SCALE_X;
-            const scaledY = field.y * SCALE_Y;
-            ctx.fillText(value, scaledX, scaledY);
-        });
+        // Draw centered Business Name manually
+        (function drawCenteredBusinessName() {
+            const field = {
+            id: 'business_name',
+            placeholder: 'Business Name',
+            fontSize: '120px',
+            fontStyle: 'bold',
+            fontFamily: 'times-new-roman',
+            y: 420 // original preview-space y
+            };
+            const value = document.getElementById(field.id)?.value || field.placeholder;
+            const font = `${field.fontStyle ? field.fontStyle + ' ' : ''}${field.fontSize} ${field.fontFamily}`;
+            const prevAlign = ctx.textAlign;
+            const prevBaseline = ctx.textBaseline;
+            ctx.font = font;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic';
+            const centerX = canvas.width / 2;
+            ctx.fillText(value, centerX, field.y * SCALE_Y);
+            ctx.textAlign = prevAlign;
+            ctx.textBaseline = prevBaseline;
+        })();
+        renderFields(fields);
     }
 }
 
-// Marriage certificate download handler
-document.getElementById('marriage-certificate-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
+function renderFields(fields) {
+    fields.forEach(f => {
+        let value = document.getElementById(f.id)?.value || f.placeholder;
+        let font = '';
+        if (f.fontStyle) font += f.fontStyle + ' ';
+    font += (f.fontSize || '48px') + ' ';
+        font += (f.fontFamily || 'times-new-roman');
+        ctx.font = font;
+        ctx.fillText(value, f.x * SCALE_X, f.y * SCALE_Y);
+    });
+}
+
+// Limited Edition chance checker (1 in 1 thousand)
+function checkLimitedEditionChance() {
+    const randomNumber = Math.floor(Math.random() * 1000) + 1;
+    return randomNumber === 1; // Exactly 1 in 1 million chance
+}
+
+// Submit handlers (download only)
+birthForm?.addEventListener('submit', e => {
+    e.preventDefault();
     drawPreview();
-    const canvas = document.getElementById('preview-canvas');
-    const groom = document.getElementById('groom_last').value || 'Groom';
-    const bride = document.getElementById('bride_last').value || 'Bride';
-    const fileName = `marriage_certificate_${groom}_and_${bride}.png`.replace(/\s+/g, '_');
-    canvas.toBlob(blob => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-        document.getElementById('success-message').textContent = 'Marriage certificate image downloaded.';
-        showSuccessModal();
-    }, 'image/png');
+    const first = document.getElementById('name_first').value;
+    const last = document.getElementById('name_last').value;
+    const name = buildFileName('birth_certificate', [first, last]);
+    downloadCanvas(canvas, name);
+    showSuccessModal('Birth certificate image downloaded.');
 });
 
-// Business permit download handler
-document.getElementById('business-permit-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
+marriageForm?.addEventListener('submit', e => {
+    e.preventDefault();
     drawPreview();
-    const canvas = document.getElementById('preview-canvas');
-    const business = document.getElementById('business_name').value || 'Business';
-    const fileName = `business_permit_${business}.png`.replace(/\s+/g, '_');
-    canvas.toBlob(blob => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-        document.getElementById('success-message').textContent = 'Business permit image downloaded.';
-        showSuccessModal();
-    }, 'image/png');
+    const groom = document.getElementById('groom_last').value;
+    const bride = document.getElementById('bride_last').value;
+    const name = buildFileName('marriage_certificate', [groom, 'and', bride]);
+    downloadCanvas(canvas, name);
+    showSuccessModal('Marriage certificate image downloaded.');
 });
+
+businessForm?.addEventListener('submit', e => {
+    e.preventDefault();
+    
+    // Roll for Limited Edition chance (1 in 10 million)
+    const isLE = checkLimitedEditionChance();
+    isLimitedEdition = isLE;
+    
+    drawPreview();
+    const business = document.getElementById('business_name').value;
+    
+    let filename, message;
+    if (isLE) {
+        filename = buildFileName('business_permit_LIMITED_EDITION', [business]);
+        message = '🎉 CONGRATULATIONS! You got the LIMITED EDITION Business Permit! (1 in 1 thousand chance!) 🎉';
+    } else {
+        filename = buildFileName('business_permit', [business]);
+        message = 'Business permit image downloaded.';
+    }
+    
+    downloadCanvas(canvas, filename);
+    showSuccessModal(message);
+    
+    // Reset limited edition flag after download
+    setTimeout(() => {
+        isLimitedEdition = false;
+        drawPreview();
+    }, 3000);
+});
+
+// Initial draw
+drawPreview();
