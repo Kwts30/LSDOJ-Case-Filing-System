@@ -3,480 +3,811 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Birth Certificate</title>
+    <title>Birth Certificate - Department of Justice</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <div class="header-bar">
-            <img src="assets/doj.png" class="header-seal" alt="Department of Justice Seal">
-            <img src="assets/lossantos.webp" class="header-seal" alt="City of Los Santos">
-            <div class="header-title">
-                <h1>DEPARTMENT OF JUSTICE</h1>
-                <p>City of Los Santos | State of San Andreas</p>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-brand">
+                <img src="assets/doj.png" class="header-logo" alt="Department of Justice Seal">
+                <img src="assets/lossantos.webp" class="header-logo" alt="City of Los Santos">
+                <div class="header-text">
+                    <h1>DEPARTMENT OF JUSTICE</h1>
+                    <p>City of Los Santos | State of San Andreas</p>
+                </div>
             </div>
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </header>
-    <div class="main-container">
-        <aside class="sidebar">
-            <img src="assets/doj.png" class="sidebar-seal" alt="DOJ Seal">
-            <div class="sidebar-title">DOCUMENTS</div>
-            <ul class="sidebar-menu">
-                <li><button class="active">Birth Certificate</button></li>
-                <li><button>Marriage Certificate</button></li>
-                <li><button>Business Permit</button></li>
-            </ul>
-        </aside>
-        <main class="content-area">
-            <div class="form-preview-wrapper">
-                <section class="form-section" id="birth-certificate-section" style="display: block;">
-                    <h2>Birth Certificate</h2>
-                    <form id="birth-certificate-form">
-                        <div class="form-block">
-                            <h3>Certificate Numbers</h3>
-                            <div class="form-row">
-                                <label>State File Number:</label>
-                                <input type="text" id="state_file_num" name="state_file_num" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Local Registration Number:</label>
-                                <input type="text" id="local_reg_num" name="local_reg_num" required>
-                            </div>
-                        </div>
-                        <div class="form-block">
-                            <h3>Child Information</h3>
-                            <div class="form-row">
-                                <label>1A. First Name of Child:</label>
-                                <input type="text" id="name_first" name="name_first" required>
-                            </div>
-                            <div class="form-row">
-                                <label>1B. Middle Name of Child:</label>
-                                <input type="text" id="name_middle" name="name_middle">
-                            </div>
-                            <div class="form-row">
-                                <label>1C. Last Name of Child:</label>
-                                <input type="text" id="name_last" name="name_last" required>
-                            </div>
-                            <div class="form-row">
-                                <label>2. Sex:</label>
-                                <input type="text" id="sex" name="sex" required>
-                            </div>
-                            <div class="form-row">
-                                <label>3A. Type of Birth (Single, Twin, etc.):</label>
-                                <input type="text" id="birth_type" name="birth_type">
-                            </div>
-                            <div class="form-row">
-                                <label>3B. if multiple this child 1st, 2nd, etc:</label>
-                                <input type="text" id="birth_weight" name="birth_weight">
-                            </div>
-                            <div class="form-row">
-                                <label>4A. date of birth - mm/dd/yyyy:</label>
-                                <input type="text" id="date_birth" name="date_birth">
-                            </div>
-                            <div class="form-row">
-                                <label>4B. Time of Birth (24-hour):</label>
-                                <input type="text" id="birth_time" name="birth_time">
-                            </div>
-                        </div>
-                        <div class="form-block">
-                            <h3>Place of Birth</h3>
-                            <div class="form-row">
-                                <label>6A. Hospital or Facility Name:</label>
-                                <input type="text" id="birth_place" name="birth_place" required>
-                            </div>
-                            <div class="form-row">
-                                <label>6B. Street Address:</label>
-                                <input type="text" id="birth_address" name="birth_address">
-                            </div>
-                            <div class="form-row">
-                                <label>6C. City:</label>
-                                <input type="text" id="birth_city" name="birth_city" required>
-                            </div>
-                            <div class="form-row">
-                                <label>6D. State:</label>
-                                <input type="text" id="birth_state" name="birth_state" required>
-                            </div>
-                        </div>
-                        <div class="form-block">
-                            <h3>Name of Mother</h3>
-                            <div class="form-row">
-                                <label>6A. Name of Mother (First):</label>
-                                <input type="text" id="mother_name" name="mother_name" required>
-                            </div>
-                            <div class="form-row">
-                                <label>6B. Middle:</label>
-                                <input type="text" id="mother_middle" name="mother_middle">
-                            </div>
-                            <div class="form-row">
-                                <label>6C. Last:</label>
-                                <input type="text" id="mother_last" name="mother_last" required>
-                            </div>
-                            <div class="form-row">
-                                <label>6D. place of birth - state/country:</label>
-                                <input type="text" id="mother_bop" name="mother_birth" required>
-                            </div>
-                            <div class="form-row">
-                                <label>6E. Date of Birth:</label>
-                                <input type="date" id="mother_birth" name="mother_birth" required>
-                            </div>
-                        </div>
-                        <div class="form-block">
-                            <h3>Name of Father</h3>
-                            <div class="form-row">
-                                <label>7A. Name of Father (First):</label>
-                                <input type="text" id="father_name" name="father_name" required>
-                            </div>
-                            <div class="form-row">
-                                <label>7B. Middle:</label>
-                                <input type="text" id="father_middle" name="father_middle">
-                            </div>
-                            <div class="form-row">
-                                <label>7C. Last:</label>
-                                <input type="text" id="father_last" name="father_last" required>
-                            </div>
-                             <div class="form-row">
-                                <label>7D. place of birth - state/country:</label>
-                                <input type="text" id="father_bop" name="father_bop" required>
-                            </div>
-                            <div class="form-row">
-                                <label>7E. Date of Birth:</label>
-                                <input type="date" id="father_birth" name="father_birth" required>
-                            </div>
-                        </div>
-                        <div class="form-block">
-                            <h3>Name of the Issuer</h3>
-                            <div class="form-row">
-                                <label>8A. Full Name of Issuer:</label>
-                                <input type="text" id="issuer_name" name="issuer_name" required>
-                            </div>
-                            <div class="form-row">
-                                <label>8B. Occupation of Issuer:</label>
-                                <input type="text" id="issuer_occupation" name="issuer_occupation">
-                            </div>
-                            <div class="form-row">
-                                <label>8C. Issuer Signature:</label>
-                                <input type="text" id="issuer_signature" name="issuer_signature" required>
-                            </div>
-                            <div class="form-row">
-                                <label>8D. Date of Registration:</label>
-                                <input type="date" id="registration_date" name="registration_date" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="submit-btn">SUBMIT</button>
-                    </form>
-                </section>
-                <section class="form-section" id="marriage-certificate-section" style="display: none;">
-                    <h2>Marriage Certificate</h2>
-                    <form id="marriage-certificate-form">
-                        <div class="form-block">
-                            <h3>Certificate Numbers</h3>
-                            <div class="form-row">
-                                <label>State File Number:</label>
-                                <input type="text" id="marriage_state_file_num" name="marriage_state_file_num" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Local Registration Number:</label>
-                                <input type="text" id="marriage_local_reg_num" name="marriage_local_reg_num" required>
-                            </div>
-                        </div>
-                        <div class="form-block">
-                            <h3>Groom Applicant Personal Data</h3>
-                            <div class="form-row">
-                                <label>First Name:</label>
-                                <input type="text" id="groom_first" name="groom_first" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Middle:</label>
-                                <input type="text" id="groom_middle" name="groom_middle" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Current Last (Family):</label>
-                                <input type="text" id="groom_last" name="groom_last" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Date of Birth (MM/DD/YYYY):</label>
-                                <input type="date" id="groom_dob" name="groom_dob" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Residence - Street and Number:</label>
-                                <input type="text" id="groom_address" name="groom_address" required>
-                            </div>
-                            <div class="form-row">
-                                <label>City:</label>
-                                <input type="text" id="groom_city" name="groom_city" required>
-                            </div>
-                            <div class="form-row">
-                                <label>State of Birth:</label>
-                                <input type="text" id="groom_birthplace" name="groom_birthplace" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Number of Marriages:</label>
-                                <input type="text" id="groom_marriages" name="groom_marriages" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Usual Occupation:</label>
-                                <input type="text" id="groom_occupation" name="groom_occupation" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Usual Kind of Business or Industry:</label>
-                                <input type="text" id="groom_business" name="groom_business" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Education - Years Completed:</label>
-                                <input type="text" id="groom_education" name="groom_education" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Full Name of Parent 1:</label>
-                                <input type="text" id="groom_parent1" name="groom_parent1" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Parent 1 State of Birth:</label>
-                                <input type="text" id="groom_parent1_birthplace" name="groom_parent1_birthplace" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Full Name of Parent 2:</label>
-                                <input type="text" id="groom_parent2" name="groom_parent2" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Parent 2 State of Birth:</label>
-                                <input type="text" id="groom_parent2_birthplace" name="groom_parent2_birthplace" required>
-                            </div>
-                        </div>
 
-                        <div class="form-block">
-                            <h3>Bride Applicant Personal Data</h3>
-                            <div class="form-row">
-                                <label>First Name:</label>
-                                <input type="text" id="bride_first" name="bride_first" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Middle:</label>
-                                <input type="text" id="bride_middle" name="bride_middle" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Current Last (Family):</label>
-                                <input type="text" id="bride_last" name="bride_last" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Date of Birth (MM/DD/YYYY):</label>
-                                <input type="date" id="bride_dob" name="bride_dob" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Residence - Street and Number:</label>
-                                <input type="text" id="bride_address" name="bride_address" required>
-                            </div>
-                            <div class="form-row">
-                                <label>City:</label>
-                                <input type="text" id="bride_city" name="bride_city" required>
-                            </div>
-                            <div class="form-row">
-                                <label>State of Birth:</label>
-                                <input type="text" id="bride_birthplace" name="bride_birthplace" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Number of Marriages:</label>
-                                <input type="text" id="bride_marriages" name="bride_marriages" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Usual Occupation:</label>
-                                <input type="text" id="bride_occupation" name="bride_occupation" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Usual Kind of Business or Industry:</label>
-                                <input type="text" id="bride_business" name="bride_business" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Education - Years Completed:</label>
-                                <input type="text" id="bride_education" name="bride_education" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Full Name of Parent 1:</label>
-                                <input type="text" id="bride_parent1" name="bride_parent1" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Parent 1 State of Birth:</label>
-                                <input type="text" id="bride_parent1_birthplace" name="bride_parent1_birthplace" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Full Name of Parent 2:</label>
-                                <input type="text" id="bride_parent2" name="bride_parent2" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Parent 2 State of Birth:</label>
-                                <input type="text" id="bride_parent2_birthplace" name="bride_parent2_birthplace" required>
-                            </div>
+    <!-- Main Layout -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/doj.png" class="sidebar-logo" alt="DOJ Seal">
+                <span class="sidebar-title">DOCUMENTS</span>
+                <button class="sidebar-close" id="sidebar-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-section="birth">
+                    <i class="fas fa-baby"></i>
+                    <span>Birth Certificate</span>
+                </button>
+                <button class="nav-item" data-section="marriage">
+                    <i class="fas fa-ring"></i>
+                    <span>Marriage Certificate</span>
+                </button>
+                <button class="nav-item" data-section="business">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Business Permit</span>
+                </button>
+                <button class="nav-item" data-section="origland">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Original Land Title</span>
+                </button>
+                <button class="nav-item" data-section="transferland">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transfer Land Title</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <p>&copy; 2025 DOJ Los Santos</p>
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- Form Panel -->
+                <div class="form-panel">
+                    <!-- Birth Certificate Form -->
+                    <section class="form-section active" id="birth-certificate-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-baby"></i> Birth Certificate</h2>
+                            <button class="collapse-all-btn" data-target="birth">
+                                <i class="fas fa-compress-alt"></i> Collapse All
+                            </button>
                         </div>
-                        <div class="form-block">
-                            <h3>Affidavit</h3>
-                            <div class="form-row">
-                                <label>Signature of Groom:</label>
-                                <input type="text" id="groom_signature" name="groom_signature" required>
+                        <form id="birth-certificate-form">
+                            <!-- Certificate Numbers -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="cert-numbers">
+                                    <h3><i class="fas fa-hashtag"></i> Certificate Numbers</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="cert-numbers">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="state_file_num">State File Number</label>
+                                            <input type="text" id="state_file_num" name="state_file_num" placeholder="Enter state file number" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="local_reg_num">Local Registration Number</label>
+                                            <input type="text" id="local_reg_num" name="local_reg_num" placeholder="Enter local registration number" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>Signature of Bride:</label>
-                                <input type="text" id="bride_signature" name="bride_signature" required>
+
+                            <!-- Child Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="child-info">
+                                    <h3><i class="fas fa-child"></i> Child Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="child-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="name_first">First Name</label>
+                                            <input type="text" id="name_first" name="name_first" placeholder="First name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="name_middle">Middle Name</label>
+                                            <input type="text" id="name_middle" name="name_middle" placeholder="Middle name">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="name_last">Last Name</label>
+                                            <input type="text" id="name_last" name="name_last" placeholder="Last name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="sex">Sex</label>
+                                            <select id="sex" name="sex" required>
+                                                <option value="">Select...</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="birth_type">Type of Birth</label>
+                                            <input type="text" id="birth_type" name="birth_type" placeholder="Single, Twin, etc.">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="birth_weight">If Multiple (1st, 2nd)</label>
+                                            <input type="text" id="birth_weight" name="birth_weight" placeholder="Order if multiple">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="date_birth">Date of Birth</label>
+                                            <input type="date" id="date_birth" name="date_birth" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="birth_time">Time of Birth (24hr)</label>
+                                            <input type="time" id="birth_time" name="birth_time">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- Place of Birth -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="birth-place">
+                                    <h3><i class="fas fa-hospital"></i> Place of Birth</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="birth-place">
+                                    <div class="form-grid">
+                                        <div class="form-field full-width">
+                                            <label for="birth_place">Hospital or Facility Name</label>
+                                            <input type="text" id="birth_place" name="birth_place" placeholder="Enter hospital/facility name" required>
+                                        </div>
+                                        <div class="form-field full-width">
+                                            <label for="birth_address">Street Address</label>
+                                            <input type="text" id="birth_address" name="birth_address" placeholder="Enter street address">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="birth_city">City</label>
+                                            <input type="text" id="birth_city" name="birth_city" placeholder="City" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="birth_state">State</label>
+                                            <input type="text" id="birth_state" name="birth_state" placeholder="State" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mother Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="mother-info">
+                                    <h3><i class="fas fa-female"></i> Mother Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="mother-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="mother_name">First Name</label>
+                                            <input type="text" id="mother_name" name="mother_name" placeholder="First name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="mother_middle">Middle Name</label>
+                                            <input type="text" id="mother_middle" name="mother_middle" placeholder="Middle name">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="mother_last">Last Name</label>
+                                            <input type="text" id="mother_last" name="mother_last" placeholder="Last name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="mother_bop">Place of Birth (State/Country)</label>
+                                            <input type="text" id="mother_bop" name="mother_birth" placeholder="State or country" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="mother_birth">Date of Birth</label>
+                                            <input type="date" id="mother_birth" name="mother_birth" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Father Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="father-info">
+                                    <h3><i class="fas fa-male"></i> Father Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="father-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="father_name">First Name</label>
+                                            <input type="text" id="father_name" name="father_name" placeholder="First name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="father_middle">Middle Name</label>
+                                            <input type="text" id="father_middle" name="father_middle" placeholder="Middle name">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="father_last">Last Name</label>
+                                            <input type="text" id="father_last" name="father_last" placeholder="Last name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="father_bop">Place of Birth (State/Country)</label>
+                                            <input type="text" id="father_bop" name="father_bop" placeholder="State or country" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="father_birth">Date of Birth</label>
+                                            <input type="date" id="father_birth" name="father_birth" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Issuer Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="issuer-info">
+                                    <h3><i class="fas fa-user-tie"></i> Issuer Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="issuer-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="issuer_name">Full Name of Issuer</label>
+                                            <input type="text" id="issuer_name" name="issuer_name" placeholder="Enter full name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="issuer_occupation">Occupation</label>
+                                            <input type="text" id="issuer_occupation" name="issuer_occupation" placeholder="Occupation">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="issuer_signature">Signature</label>
+                                            <input type="text" id="issuer_signature" name="issuer_signature" placeholder="Signature" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="registration_date">Date of Registration</label>
+                                            <input type="date" id="registration_date" name="registration_date" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-file-download"></i> Generate Certificate
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- Marriage Certificate Form -->
+                    <section class="form-section" id="marriage-certificate-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-ring"></i> Marriage Certificate</h2>
+                            <button class="collapse-all-btn" data-target="marriage">
+                                <i class="fas fa-compress-alt"></i> Collapse All
+                            </button>
                         </div>
-                        <div class="form-block">
-                            <h3>Marriage Details</h3>
-                            <div class="form-row">
-                                <label>Date of Marriage:</label>
-                                <input type="date" id="marriage_date" name="marriage_date" required>
+                        <form id="marriage-certificate-form">
+                            <!-- Certificate Numbers -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="marriage-cert-numbers">
+                                    <h3><i class="fas fa-hashtag"></i> Certificate Numbers</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="marriage-cert-numbers">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="marriage_state_file_num">State File Number</label>
+                                            <input type="text" id="marriage_state_file_num" name="marriage_state_file_num" placeholder="Enter state file number" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="marriage_local_reg_num">Local Registration Number</label>
+                                            <input type="text" id="marriage_local_reg_num" name="marriage_local_reg_num" placeholder="Enter local registration number" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>Place of Marriage:</label>
-                                <input type="text" id="marriage_place" name="marriage_place" required>
+
+                            <!-- Groom Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="groom-info">
+                                    <h3><i class="fas fa-male"></i> Groom Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="groom-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="groom_first">First Name</label>
+                                            <input type="text" id="groom_first" name="groom_first" placeholder="First name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_middle">Middle Name</label>
+                                            <input type="text" id="groom_middle" name="groom_middle" placeholder="Middle name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_last">Last Name</label>
+                                            <input type="text" id="groom_last" name="groom_last" placeholder="Last name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_dob">Date of Birth</label>
+                                            <input type="date" id="groom_dob" name="groom_dob" required>
+                                        </div>
+                                        <div class="form-field full-width">
+                                            <label for="groom_address">Street Address</label>
+                                            <input type="text" id="groom_address" name="groom_address" placeholder="Street and number" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_city">City</label>
+                                            <input type="text" id="groom_city" name="groom_city" placeholder="City" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_birthplace">State of Birth</label>
+                                            <input type="text" id="groom_birthplace" name="groom_birthplace" placeholder="State" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_marriages">Number of Marriages</label>
+                                            <input type="text" id="groom_marriages" name="groom_marriages" placeholder="Number" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_occupation">Occupation</label>
+                                            <input type="text" id="groom_occupation" name="groom_occupation" placeholder="Occupation" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_business">Business/Industry</label>
+                                            <input type="text" id="groom_business" name="groom_business" placeholder="Business type" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_education">Education (Years)</label>
+                                            <input type="text" id="groom_education" name="groom_education" placeholder="Years completed" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_parent1">Parent 1 Full Name</label>
+                                            <input type="text" id="groom_parent1" name="groom_parent1" placeholder="Full name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_parent1_birthplace">Parent 1 Birthplace</label>
+                                            <input type="text" id="groom_parent1_birthplace" name="groom_parent1_birthplace" placeholder="State of birth" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_parent2">Parent 2 Full Name</label>
+                                            <input type="text" id="groom_parent2" name="groom_parent2" placeholder="Full name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="groom_parent2_birthplace">Parent 2 Birthplace</label>
+                                            <input type="text" id="groom_parent2_birthplace" name="groom_parent2_birthplace" placeholder="State of birth" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>City:</label>
-                                <input type="text" id="marriage_city" name="marriage_city" required>
+
+                            <!-- Bride Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="bride-info">
+                                    <h3><i class="fas fa-female"></i> Bride Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="bride-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="bride_first">First Name</label>
+                                            <input type="text" id="bride_first" name="bride_first" placeholder="First name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_middle">Middle Name</label>
+                                            <input type="text" id="bride_middle" name="bride_middle" placeholder="Middle name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_last">Last Name</label>
+                                            <input type="text" id="bride_last" name="bride_last" placeholder="Last name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_dob">Date of Birth</label>
+                                            <input type="date" id="bride_dob" name="bride_dob" required>
+                                        </div>
+                                        <div class="form-field full-width">
+                                            <label for="bride_address">Street Address</label>
+                                            <input type="text" id="bride_address" name="bride_address" placeholder="Street and number" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_city">City</label>
+                                            <input type="text" id="bride_city" name="bride_city" placeholder="City" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_birthplace">State of Birth</label>
+                                            <input type="text" id="bride_birthplace" name="bride_birthplace" placeholder="State" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_marriages">Number of Marriages</label>
+                                            <input type="text" id="bride_marriages" name="bride_marriages" placeholder="Number" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_occupation">Occupation</label>
+                                            <input type="text" id="bride_occupation" name="bride_occupation" placeholder="Occupation" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_business">Business/Industry</label>
+                                            <input type="text" id="bride_business" name="bride_business" placeholder="Business type" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_education">Education (Years)</label>
+                                            <input type="text" id="bride_education" name="bride_education" placeholder="Years completed" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_parent1">Parent 1 Full Name</label>
+                                            <input type="text" id="bride_parent1" name="bride_parent1" placeholder="Full name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_parent1_birthplace">Parent 1 Birthplace</label>
+                                            <input type="text" id="bride_parent1_birthplace" name="bride_parent1_birthplace" placeholder="State of birth" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_parent2">Parent 2 Full Name</label>
+                                            <input type="text" id="bride_parent2" name="bride_parent2" placeholder="Full name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_parent2_birthplace">Parent 2 Birthplace</label>
+                                            <input type="text" id="bride_parent2_birthplace" name="bride_parent2_birthplace" placeholder="State of birth" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>State:</label>
-                                <input type="text" id="marriage_state" name="marriage_state" required>
+
+                            <!-- Affidavit -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="affidavit-info">
+                                    <h3><i class="fas fa-signature"></i> Affidavit</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="affidavit-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="groom_signature">Groom Signature</label>
+                                            <input type="text" id="groom_signature" name="groom_signature" placeholder="Signature" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="bride_signature">Bride Signature</label>
+                                            <input type="text" id="bride_signature" name="bride_signature" placeholder="Signature" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- Marriage Details -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="marriage-details">
+                                    <h3><i class="fas fa-heart"></i> Marriage Details</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="marriage-details">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="marriage_date">Date of Marriage</label>
+                                            <input type="date" id="marriage_date" name="marriage_date" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="marriage_place">Place of Marriage</label>
+                                            <input type="text" id="marriage_place" name="marriage_place" placeholder="Place" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="marriage_city">City</label>
+                                            <input type="text" id="marriage_city" name="marriage_city" placeholder="City" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="marriage_state">State</label>
+                                            <input type="text" id="marriage_state" name="marriage_state" placeholder="State" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Officiant Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="officiant-info">
+                                    <h3><i class="fas fa-user-tie"></i> Officiant Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="officiant-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="officiant_name">Officiant Name</label>
+                                            <input type="text" id="officiant_name" name="officiant_name" placeholder="Full name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="officiant_occupation">Occupation</label>
+                                            <input type="text" id="officiant_occupation" name="officiant_occupation" placeholder="Occupation" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Witnesses -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="witness-info">
+                                    <h3><i class="fas fa-users"></i> Witnesses Details</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="witness-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="witness1_signature">Witness 1 Signature</label>
+                                            <input type="text" id="witness1_signature" name="witness1_signature" placeholder="Signature" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="witness1_name">Witness 1 Name</label>
+                                            <input type="text" id="witness1_name" name="witness1_name" placeholder="Full name" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="witness2_signature">Witness 2 Signature</label>
+                                            <input type="text" id="witness2_signature" name="witness2_signature" placeholder="Signature" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="witness2_name">Witness 2 Name</label>
+                                            <input type="text" id="witness2_name" name="witness2_name" placeholder="Full name" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-file-download"></i> Generate Certificate
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- Business Permit Form -->
+                    <section class="form-section" id="business-permit-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-briefcase"></i> Business Permit</h2>
+                            <button class="collapse-all-btn" data-target="business">
+                                <i class="fas fa-compress-alt"></i> Collapse All
+                            </button>
                         </div>
-                        <div class="form-block">
-                            <h3>Officiant Details</h3>
-                            <div class="form-row">
-                                <label>Full Name of Officiant:</label>
-                                <input type="text" id="officiant_name" name="officiant_name" required>
+                        <form id="business-permit-form">
+                            <!-- Business Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="business-info">
+                                    <h3><i class="fas fa-building"></i> Business Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="business-info">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="date_issued">Date Issued</label>
+                                            <input type="date" id="date_issued" name="date_issued" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="date_expiration">Expiration Date</label>
+                                            <input type="date" id="date_expiration" name="date_expiration" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="classification">Classification</label>
+                                            <input type="text" id="classification" name="classification" placeholder="NEW/RENEWAL" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="business_id_number">Business ID Number</label>
+                                            <input type="text" id="business_id_number" name="business_id_number" placeholder="Business ID" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="permit_number">Permit Number</label>
+                                            <input type="text" id="permit_number" name="permit_number" placeholder="Permit #">
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="permit_year">Permit Year</label>
+                                            <input type="text" id="permit_year" name="permit_year" placeholder="2025" required>
+                                        </div>
+                                        <div class="form-field full-width">
+                                            <label for="business_name">Business Name</label>
+                                            <input type="text" id="business_name" name="business_name" placeholder="Enter business name" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>Occupation:</label>
-                                <input type="text" id="officiant_occupation" name="officiant_occupation" required>
-                            </div>
+
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-file-download"></i> Generate Permit
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- Original Land Title Form -->
+                    <section class="form-section" id="origland-title-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-file-contract"></i> Original Land Title</h2>
+                            <button class="collapse-all-btn" data-target="origland">
+                                <i class="fas fa-compress-alt"></i> Collapse All
+                            </button>
                         </div>
-                        <div class="form-block">
-                            <h3>Witnesses Details</h3>
-                            <div class="form-row">
-                                <label>Signature of 1st Witness:</label>
-                                <input type="text" id="witness1_signature" name="witness1_signature" required>
+                        <form id="origland-title-form">
+                            <!-- Title Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="origland-info">
+                                    <h3><i class="fas fa-info-circle"></i> Title Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="origland-info">
+                                    <div class="form-grid">
+                                        <div class="form-field full-width">
+                                            <label for="orig_full_name">Full Name</label>
+                                            <input type="text" id="orig_full_name" name="orig_full_name" placeholder="Enter full name" required>
+                                        </div>
+                                        <div class="form-field full-width">
+                                            <label for="orig_full_address">Full Address</label>
+                                            <input type="text" id="orig_full_address" name="orig_full_address" placeholder="Enter full address" required>
+                                        </div>
+                                        <div class="form-field full-width">
+                                            <label for="orig_land_title_number">Land Title Number</label>
+                                            <input type="text" id="orig_land_title_number" name="orig_land_title_number" placeholder="Enter land title number" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>Full Name of 1st Witness:</label>
-                                <input type="text" id="witness1_name" name="witness1_name" required>
+
+                            <!-- Date of Issuance -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="origland-date">
+                                    <h3><i class="fas fa-calendar-alt"></i> Date of Issuance</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="origland-date">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="orig_issue_month">Month</label>
+                                            <input type="text" id="orig_issue_month" name="orig_issue_month" placeholder="e.g. January" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="orig_issue_day">Day</label>
+                                            <input type="text" id="orig_issue_day" name="orig_issue_day" placeholder="e.g. 15" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="orig_issue_year">Year</label>
+                                            <input type="text" id="orig_issue_year" name="orig_issue_year" placeholder="e.g. 2025" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>Signature of 2nd Witness:</label>
-                                <input type="text" id="witness2_signature" name="witness2_signature" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Full Name of 2nd Witness:</label>
-                                <input type="text" id="witness2_name" name="witness2_name" required>
-                            </div>
+
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-file-download"></i> Generate Title
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- Transfer Land Title Form -->
+                    <section class="form-section" id="transferland-title-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-exchange-alt"></i> Transfer Land Title</h2>
+                            <button class="collapse-all-btn" data-target="transferland">
+                                <i class="fas fa-compress-alt"></i> Collapse All
+                            </button>
                         </div>
-                        <button type="submit" class="submit-btn">Submit Marriage Certificate</button>
-                    </form>
-                </section>
-                <section class="form-section" id="business-permit-section" style="display:none;">
-                    <h2>Business Permit</h2>
-                    <form id="business-permit-form">
-                        <div class="form-block">
-                            <h3>Business Information</h3>
-                            <div class="form-row">
-                                <label>Date Issued:</label>
-                                <input type="date" id="date_issued" name="date_issued" required>
+                        <form id="transferland-title-form">
+                            <!-- Title Information -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="transferland-info">
+                                    <h3><i class="fas fa-info-circle"></i> Title Information</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="transferland-info">
+                                    <div class="form-grid">
+                                        <div class="form-field full-width">
+                                            <label for="trans_full_name">Full Name</label>
+                                            <input type="text" id="trans_full_name" name="trans_full_name" placeholder="Enter full name" required>
+                                        </div>
+                                        <div class="form-field full-width">
+                                            <label for="trans_full_address">Full Address</label>
+                                            <input type="text" id="trans_full_address" name="trans_full_address" placeholder="Enter full address" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="trans_land_title_number">Land Title Number</label>
+                                            <input type="text" id="trans_land_title_number" name="trans_land_title_number" placeholder="Enter land title number" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="trans_orig_land_title_number">Original Land Title Number</label>
+                                            <input type="text" id="trans_orig_land_title_number" name="trans_orig_land_title_number" placeholder="Enter original title number" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>Classification:</label>
-                                <input type="text" id="classification" name="classification" placeholder="e.g. NEW/RENEWAL" required>
+
+                            <!-- Date of Issuance -->
+                            <div class="form-group">
+                                <div class="form-group-header" data-toggle="transferland-date">
+                                    <h3><i class="fas fa-calendar-alt"></i> Date of Issuance</h3>
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                </div>
+                                <div class="form-group-content open" id="transferland-date">
+                                    <div class="form-grid">
+                                        <div class="form-field">
+                                            <label for="trans_issue_month">Month</label>
+                                            <input type="text" id="trans_issue_month" name="trans_issue_month" placeholder="e.g. January" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="trans_issue_day">Day</label>
+                                            <input type="text" id="trans_issue_day" name="trans_issue_day" placeholder="e.g. 15" required>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="trans_issue_year">Year</label>
+                                            <input type="text" id="trans_issue_year" name="trans_issue_year" placeholder="e.g. 2025" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-row">
-                                <label>Business Identification Number:</label>
-                                <input type="text" id="business_id_number" name="business_id_number" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Business Name:</label>
-                                <input type="text" id="business_name" name="business_name" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Date Expiration:</label>
-                                <input type="date" id="date_expiration" name="date_expiration" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Permit No:</label>
-                                <input type="text" id="permit_number" name="permit_number">
-                            </div>
-                            <div class="form-row">
-                                <label>Permit Year:</label>
-                                <input type="text" id="permit_year" name="permit_year" placeholder="2025" required>
-                            </div>
-                            <div class="form-row">
-                                <label>Local Registration Number:</label>
-                                <input type="text" id="business_local_reg_num" name="business_local_reg_num">
-                            </div>
-                        </div>
-                        <button type="submit" class="submit-btn">Submit Business Permit</button>
-                    </form>
-                </section>
-                <section class="preview-section">
-                    <h2>Document Preview</h2>
-                    <div class="zoom-control">
-                        <label for="zoom-range">Zoom:</label>
-                        <input type="range" id="zoom-range" min="40" max="120" value="100">
-                        <span id="zoom-value">100%</span>
+
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-file-download"></i> Generate Transfer Title
+                            </button>
+                        </form>
+                    </section>
+                </div>
+
+                <!-- Preview Panel -->
+                <div class="preview-panel">
+                    <div class="preview-header">
+                        <h2><i class="fas fa-eye"></i> Live Preview</h2>
                     </div>
-                    <div id="preview-container">
-                        <canvas id="preview-canvas"></canvas>
+                    <div class="preview-wrapper">
+                        <div class="preview-container" id="preview-container">
+                            <canvas id="preview-canvas"></canvas>
+                        </div>
                     </div>
-                </section>
+                </div>
             </div>
         </main>
     </div>
-    <footer>
-        <div class="footer-bar">
-            <span>&copy; kwts | All rights reserved 2025</span>
-            <span>City of Los Santos</span>
-            <img src="assets/lossantos.webp" class="footer-seal" alt="City of Los Santos">
-            <span>State of San Andreas</span>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <img src="assets/doj.png" class="footer-logo" alt="DOJ Seal">
+            <p>&copy; kwts | All rights reserved 2025 | City of Los Santos | State of San Andreas</p>
+            <img src="assets/lossantos.webp" class="footer-logo" alt="Los Santos Seal">
         </div>
     </footer>
+
+    <!-- Modals -->
     <div id="loading-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
+                <i class="fas fa-spinner fa-spin modal-icon"></i>
                 <h3>Processing Document</h3>
             </div>
             <div class="modal-body">
-                <div class="spinner"></div>
                 <p id="loading-message">Please wait while we process your request...</p>
-                <p class="loading-details">This may take a few moments</p>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button id="cancel-button" class="cancel-btn">Cancel Process</button>
+                <button id="cancel-button" class="modal-btn secondary">Cancel</button>
             </div>
         </div>
     </div>
+
     <div id="success-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header success">
+                <i class="fas fa-check-circle modal-icon"></i>
                 <h3>Success!</h3>
             </div>
             <div class="modal-body">
-                <div class="success-icon">✓</div>
-                <p id="success-message">The document image has been generated and downloaded.</p>
-                <p class="success-details">You can now close this window</p>
+                <p id="success-message">Your certificate has been generated successfully!</p>
             </div>
             <div class="modal-footer">
-                <button id="done-button" class="done-btn">Done</button>
+                <button id="done-button" class="modal-btn primary">Done</button>
             </div>
         </div>
     </div>
+
     <div id="error-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header error">
+                <i class="fas fa-exclamation-circle modal-icon"></i>
                 <h3>Error</h3>
             </div>
             <div class="modal-body">
-                <div class="success-icon" style="background-color:#e74c3c;">&#10006;</div>
-                <p id="error-message">An error occurred.</p>
-                <p class="success-details">Please try again or contact KWTS for reports.</p>
+                <p id="error-message">An error occurred while generating the certificate.</p>
             </div>
             <div class="modal-footer">
-                <button id="close-error-button" class="done-btn">Close</button>
+                <button id="close-error-button" class="modal-btn primary">Close</button>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
