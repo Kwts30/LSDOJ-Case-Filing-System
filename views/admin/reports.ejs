@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .section { margin-bottom: 3rem; }
+        .section h2 { color: #6b3a0b; margin-bottom: 1rem; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { background: #f9f9f9; font-weight: 600; }
+        .btn { padding: 0.5rem 1rem; background: #6b3a0b; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <%- include('../partials/header') %>
+    <div class="admin-container">
+        <h1><i class="fas fa-chart-bar"></i> Reports</h1>
+
+        <div class="section">
+            <h2>Documents by Type</h2>
+            <table>
+                <tr><th>Type</th><th>Count</th></tr>
+                <% reports.byType.forEach(r => { %>
+                    <tr><td><%= r._id %></td><td><%= r.count %></td></tr>
+                <% }); %>
+            </table>
+            <a href="/admin/export/report?type=documents" class="btn" style="margin-top: 1rem;"><i class="fas fa-download"></i> Export CSV</a>
+        </div>
+
+        <div class="section">
+            <h2>Documents by User</h2>
+            <table>
+                <tr><th>User</th><th>Count</th></tr>
+                <% reports.byUser.forEach(r => { %>
+                    <tr><td><%= r.clientName || r._id %></td><td><%= r.count %></td></tr>
+                <% }); %>
+            </table>
+        </div>
+
+        <a href="/admin/dashboard" class="btn"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+</body>
+</html>

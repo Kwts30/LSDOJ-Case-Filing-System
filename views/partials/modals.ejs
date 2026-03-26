@@ -1,0 +1,52 @@
+<!-- Modals partial -->
+
+<!-- Loading Modal -->
+<div id="loading-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <i class="fas fa-spinner fa-spin modal-icon"></i>
+            <h3>Processing Document</h3>
+        </div>
+        <div class="modal-body">
+            <p id="loading-message">Please wait while we process your request...</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="cancel-button" class="modal-btn secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header success">
+            <i class="fas fa-check-circle modal-icon"></i>
+            <h3>Success!</h3>
+        </div>
+        <div class="modal-body">
+            <p id="success-message">Your certificate has been generated successfully!</p>
+        </div>
+        <div class="modal-footer">
+            <button id="done-button" class="modal-btn primary">Done</button>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="error-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header error">
+            <i class="fas fa-exclamation-circle modal-icon"></i>
+            <h3>Error</h3>
+        </div>
+        <div class="modal-body">
+            <p id="error-message">An error occurred while generating the certificate.</p>
+        </div>
+        <div class="modal-footer">
+            <button id="close-error-button" class="modal-btn primary">Close</button>
+        </div>
+    </div>
+</div>

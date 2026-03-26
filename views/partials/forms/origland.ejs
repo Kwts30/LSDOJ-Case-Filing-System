@@ -1,0 +1,60 @@
+<!-- Original Land Title Form -->
+<section class="form-section" id="origland-title-section">
+    <div class="section-header">
+        <h2><i class="fas fa-file-contract"></i> Original Land Title</h2>
+        <button class="collapse-all-btn" data-target="origland">
+            <i class="fas fa-compress-alt"></i> Collapse All
+        </button>
+    </div>
+    <form id="origland-title-form">
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="origland-info">
+                <h3><i class="fas fa-info-circle"></i> Title Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="origland-info">
+                <div class="form-grid">
+                    <div class="form-field full-width">
+                        <label for="orig_full_name">Full Name</label>
+                        <input type="text" id="orig_full_name" name="orig_full_name" required>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="orig_full_address">Full Address</label>
+                        <input type="text" id="orig_full_address" name="orig_full_address" required>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="orig_land_title_number">Land Title Number</label>
+                        <input type="text" id="orig_land_title_number" name="orig_land_title_number" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="origland-date">
+                <h3><i class="fas fa-calendar-alt"></i> Date of Issuance</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="origland-date">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="orig_issue_month">Month</label>
+                        <input type="text" id="orig_issue_month" name="orig_issue_month" placeholder="e.g. January" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="orig_issue_day">Day</label>
+                        <input type="text" id="orig_issue_day" name="orig_issue_day" placeholder="e.g. 15" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="orig_issue_year">Year</label>
+                        <input type="text" id="orig_issue_year" name="orig_issue_year" placeholder="e.g. 2025" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            <i class="fas fa-file-download"></i> Generate Title
+        </button>
+    </form>
+</section>

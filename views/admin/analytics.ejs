@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-card h3 { color: #666; margin-bottom: 0.5rem; }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #6b3a0b; }
+        table { width: 100%; border-collapse: collapse; background: white; margin: 1rem 0; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { background: #f9f9f9; font-weight: 600; }
+        .btn { padding: 0.5rem 1rem; background: #6b3a0b; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <%- include('../partials/header') %>
+    <div class="admin-container">
+        <h1><i class="fas fa-chart-pie"></i> User Analytics</h1>
+
+        <div class="stat-card">
+            <h3>Total Logins</h3>
+            <div class="stat-number"><%= analytics.logins %></div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Documents Generated</h3>
+            <div class="stat-number"><%= analytics.documentCreations %></div>
+        </div>
+
+        <h2>User Activity (Top Users)</h2>
+        <table>
+            <tr>
+                <th>User ID</th>
+                <th>Total Actions</th>
+            </tr>
+            <% analytics.userActivity.forEach(user => { %>
+                <tr>
+                    <td><%= user._id %></td>
+                    <td><%= user.actions %></td>
+                </tr>
+            <% }); %>
+        </table>
+
+        <div style="margin-top: 2rem;">
+            <a href="/admin/dashboard" class="btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

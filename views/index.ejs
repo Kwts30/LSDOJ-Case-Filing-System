@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Department of Justice</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <!-- Main Layout -->
+    <div class="app-container">
+        <%- include('partials/sidebar') %>
+        <%- include('partials/overlay') %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- Form Panel -->
+                <div class="form-panel">
+                    <%- include('partials/forms/birth') %>
+                    <%- include('partials/forms/marriage') %>
+                    <%- include('partials/forms/business') %>
+                    <%- include('partials/forms/origland') %>
+                    <%- include('partials/forms/transferland') %>
+                </div>
+
+                <!-- Preview Panel -->
+                <div class="preview-panel">
+                    <div class="preview-header">
+                        <h2><i class="fas fa-eye"></i> Live Preview</h2>
+                    </div>
+                    <div class="preview-wrapper">
+                        <div class="preview-container" id="preview-container">
+                            <canvas id="preview-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <%- include('partials/footer') %>
+    <%- include('partials/modals') %>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

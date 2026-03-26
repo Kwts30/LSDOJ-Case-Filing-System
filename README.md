@@ -1,135 +1,542 @@
-# DOJ Auto-Fillup System (Pure Frontend Edition)
+# DOJ Auto-Fillup System v2.0 - Node.js Edition
 
-A lightweight, fully client-side (no backend required) auto-fill generator for DOJ-style documents used in FiveM roleplay servers. Generates high-resolution PNG images directly in the browser.
+A production-grade, secure document auto-generation system with Express.js backend, EJS templating, MongoDB rate limiting, and comprehensive security measures. Generates high-resolution PNG documents for FiveM roleplay servers.
 
-## Table of Contents
+## 📋 Table of Contents
 
-- [Project Overview](#project-overview)
 - [Features](#features)
-- [Demo/Screenshots](#demoscreenshots)
-- [Folder Structure](#folder-structure)
-- [Getting Started](#getting-started)
-   - [Quick Use](#quick-use)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Configuration](#configuration)
 - [Usage](#usage)
-- [Technologies Used](#technologies-used)
-- [Contributing](#contributing)
-- [Support](#support)
-- [License](#license)
+- [API Endpoints](#api-endpoints)
+- [Security Features](#security-features)
+- [Rate Limiting](#rate-limiting)
+- [Project Structure](#project-structure)
+- [Technologies](#technologies)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## Project Overview
+## ✨ Features
 
-This edition of the tool is 100% static: open `index.html` and start generating documents. All rendering and image exporting happen locally using an HTML5 `<canvas>`. No data leaves your machine.
+### Core Features
+- **5 Document Types**: Birth Certificate, Marriage Certificate, Business Permit, Original Land Title, Transfer Land Title
+- **Live Preview Canvas**: Real-time document preview as you type
+- **Client-Side Rendering**: Canvas rendering happens in the browser (no server strain)
+- **High Resolution**: Generates 2480x3508px PNG documents
 
-**Use Case:** Rapid creation of official-themed documents (Birth Certificate, Marriage Certificate, Business Permit) for RP scenarios.
+### Security Features
+- **Rate Limiting**: 50 requests/hour per user (IP + Session tracking via MongoDB)
+- **Input Validation**: Sanitized form inputs with express-validator
+- **XSS Protection**: EJS template escaping + Helmet.js CSP headers
+- **Security Headers**: X-Frame-Options, X-Content-Type-Options, HSTS
+- **CORS Protection**: Configurable CORS settings
+- **Session Management**: Secure HTTP-only cookies with expiration
 
----
-
-## Features
-
-- Live preview while typing
-- High-resolution (2480x3508) PNG export
-- Three document types: Birth, Marriage, Business Permit
-- Works offline / no server required
-- Clean filename generation (sanitized)
-- Fallback handling for missing business permit template
-- Simple, single-folder deployment (GitHub Pages friendly)
-
----
-
-## Demo/Screenshots
-
-## Birth Certificate
-> ![image](https://github.com/user-attachments/assets/fda8dfb3-0d6f-4d66-8326-7869b23d0d1e)
-
-## Marriage Certificate
-> ![image](https://github.com/user-attachments/assets/0052e79c-397b-41be-9832-8b27baa2274b)
-
-
+### Infrastructure
+- **Express.js**: Lightweight, production-ready web framework
+- **EJS Templating**: Clean, modular view templates
+- **MongoDB Integration**: Optional persistent rate limiting storage
+- **Compression**: Response compression for faster delivery
+- **Logging**: Morgan HTTP request logging
+- **Error Handling**: Global error handler with environment-aware responses
 
 ---
 
-## Folder Structure
+## 🏗️ Architecture
 
-Root contains:
-- `index.html` – main UI
-- `style.css` – styling
-- `script.js` – canvas rendering & download logic
-- `assets/` – certificate background images
-- `README.md` – this file
- 
+```
+┌─────────────────────────────────────────┐
+│           Client (Browser)              │
+│   - HTML5 Forms (EJS Rendered)          │
+│   - Canvas API for Document Rendering   │
+│   - Vanilla JavaScript (app.js)         │
+│   - CSS3 Styling                        │
+└────────────────┬────────────────────────┘
+                 │ HTTP Requests
+                 ▼
+┌─────────────────────────────────────────┐
+│        Express.js Server                │
+├──────────────────────────────────────── ┤
+│  Middleware Stack:                      │
+│  ├─ Helmet (Security Headers)           │
+│  ├─ Morgan (Logging)                    │
+│  ├─ Session Management                  │
+│  ├─ Rate Limiting (IP + Session)        │
+│  ├─ Input Validation & Sanitization     │
+│  └─ Error Handling                      │
+├──────────────────────────────────────── ┤
+│  Routes:                                │
+│  ├─ GET /           → Render Form       │
+│  ├─ POST /api/generate → Validate       │
+│  ├─ GET /health     → Health Check      │
+│  └─ Static Assets   → /public           │
+└────────────────┬────────────────────────┘
+                 │ Documents & Assets
+                 ▼
+         ┌───────────────┐
+         │    MongoDB    │
+         │ (Rate Limits) │
+         └───────────────┘
+```
 
 ---
 
-## Getting Started
+## 🚀 Installation
 
-### Quick Use
+### Prerequisites
+- **Node.js** v16.0.0 or higher
+- **npm** or **yarn** (comes with Node.js)
+- **MongoDB** (optional, for persistent rate limiting) - MongoDB Atlas connection string
 
-1. Clone or download the repository.
-2. Open `index.html` in any modern browser (Chrome, Firefox, Edge, Safari).
-3. Fill out a form (Birth / Marriage / Business).
-4. Watch the live preview update.
-5. Press Submit to download a PNG.
-
-Optional: Use a lightweight static server (improves image caching):
+### Step 1: Clone the Repository
 
 ```bash
-# Python 3 (if installed)
-python -m http.server 8080
-
-# Node (if installed)
-npx serve .
+git clone https://github.com/Kwts30/DOJ_Auto-FIllup_System.git
+cd DOJ_Auto-FIllup_System
 ```
-Then open http://localhost:8080
+
+### Step 2: Install Dependencies
+
+```bash
+npm install
+```
+
+Expected output: `added 138 packages, found 0 vulnerabilities`
+
+### Step 3: Create Environment File
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and configure variables (see [Configuration](#configuration))
+
+### Step 4: Start the Server
+
+```bash
+npm start
+```
+
+Expected output:
+```
+╔════════════════════════════════════════╗
+║   DOJ Auto-Fillup System v2.0.0       ║
+║   🚀 Server running on port 3000      ║
+║   📊 Rate Limit: 50 requests/hour      ║
+║   🗄️  MongoDB: Connected              ║
+║   🔗 http://localhost:3000             ║
+╚════════════════════════════════════════╝
+```
+
+Open your browser to **http://localhost:3000**
 
 ---
 
-## Usage
+## ⚙️ Configuration
 
-1. Open `index.html`.
-2. Choose a document type via the sidebar.
-3. Enter data; the preview updates automatically.
-4. Submit the form to trigger a download of the rendered PNG.
-5. Repeat or switch document types as needed.
+### Environment Variables (.env)
+
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# MongoDB (for rate limiting persistence)
+MONGODB_URI=mongodb://localhost:27017/doj-auto-fillup
+# Or use MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://username:password@cluster0.mongodb.net/doj-auto-fillup
+
+# Rate Limiting
+RATE_LIMIT_WINDOW=3600        # 1 hour in seconds
+RATE_LIMIT_MAX_REQUESTS=50    # 50 requests per hour per user
+
+# Session
+SESSION_SECRET=your-super-secret-key-change-in-production
+```
+
+### Development vs Production
+
+**Development** (NODE_ENV=development):
+- Request logging enabled
+- Detailed error messages with stack traces
+- Live reload recommended (use `npm run dev` with nodemon)
+
+**Production** (NODE_ENV=production):
+- Errors don't expose stack traces
+- HTTPS enforced
+- Secure cookies only
+- Rate limiting strictly enforced
+
+### MongoDB Setup
+
+**Local MongoDB:**
+```bash
+# If you have MongoDB installed locally
+docker run -d -p 27017:27017 --name mongo mongo:latest
+```
+
+**MongoDB Atlas (Cloud):**
+1. Create account at https://www.mongodb.com/cloud/atlas
+2. Create a cluster
+3. Get connection string
+4. Set `MONGODB_URI` in `.env`
 
 ---
 
-## Technologies Used
+## 📖 Usage
 
-- HTML5 + CSS3 + Vanilla JavaScript
-- Canvas 2D API
-- (Removed) Python / FastAPI / Discord.py (no longer required in this edition)
+### For End Users
 
----
+1. Open http://localhost:3000
+2. Choose document type from sidebar (Birth, Marriage, Business, Land Title)
+3. Fill in required fields
+4. Watch live preview update in real-time
+5. Click "Generate [Document]" to download PNG
+6. Repeat up to 50 times per hour
 
-## Contributing
+### For Developers
 
-Contributions are welcome!  
-Please open an issue or pull request for suggestions, bugfixes, or new features.
+**Development with Live Reload:**
+```bash
+npm run dev
+# Opens with nodemon for auto-restart on file changes
+```
 
-1. Fork this repository
-2. Create a feature branch: `git checkout -b my-feature`
-3. Commit your changes: `git commit -am 'Add new feature'`
-4. Push to the branch: `git push origin my-feature`
-5. Open a pull request
+**Production Deployment:**
+```bash
+NODE_ENV=production npm start
+```
 
----
-
-## Support
-
-- Open an issue for bugs or feature requests.
-- Ideas welcome for: PDF export, localStorage persistence, custom template upload.
-
----
-
-## License
-
-This project is for hobby and personal use. You are free to use, modify, and share it — but please credit the original author (KWTS) and do not use it commercially without permission.
+**Health Check:**
+```bash
+curl http://localhost:3000/health
+# Returns: {"status":"healthy","uptime":123.45,"version":"2.0.0"}
+```
 
 ---
 
-### Changelog (Frontend Edition)
-- Removed all backend Python/Discord code (app.py, bot_utils.py)
-- Simplified README for static deployment
-- Ensured download-only workflow
+## 🔌 API Endpoints
+
+### GET /
+Renders the main form page.
+
+**Response:** HTML (200 OK)
+
+```bash
+curl http://localhost:3000/
+```
+
+### POST /api/generate
+Validates form data and returns validation status.
+
+**Request Body:**
+```json
+{
+  "formType": "birth",
+  "state_file_num": "123456",
+  "name_first": "John",
+  "name_last": "Doe",
+  ...
+}
+```
+
+**Response (Success):**
+```json
+{
+  "success": true,
+  "message": "Form validated successfully",
+  "formType": "birth",
+  "timestamp": "2025-03-26T04:30:00.000Z"
+}
+```
+
+**Response (Missing Fields):**
+```json
+{
+  "error": "Missing required fields",
+  "missingFields": ["state_file_num", "name_first"],
+  "message": "Please fill in: state_file_num, name_first"
+}
+```
+
+**Response (Rate Limited):**
+```json
+{
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Maximum 50 requests per hour allowed.",
+  "retryAfter": 3600
+}
+```
+
+### GET /api/status
+Returns API status and available formats.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "version": "2.0.0",
+  "timestamp": "2025-03-26T04:30:00.000Z",
+  "availableFormats": ["birth", "marriage", "business", "origland", "transferland"]
+}
+```
+
+### GET /health
+Health check endpoint.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "uptime": 3600.5,
+  "timestamp": "2025-03-26T04:30:00.000Z",
+  "version": "2.0.0"
+}
+```
+
+---
+
+## 🔒 Security Features
+
+### Rate Limiting (50/hour per user)
+
+**Tracking Method:** IP Address + Session ID
+
+```
+Max Requests: 50 per hour
+Window: 3600 seconds
+Identifier: {IP}:{SessionID}
+Storage: MongoDB (optional)
+Headers Returned:
+  - X-RateLimit-Limit: 50
+  - X-RateLimit-Remaining: 47
+  - X-RateLimit-Reset: 2025-03-26T05:30:00Z
+  - Retry-After: 3600
+```
+
+**Example Rate Limit Response (429 Too Many Requests):**
+```bash
+curl http://localhost:3000/ -H "X-Forwarded-For: 192.168.1.1"
+# After 50 requests in 1 hour from same IP
+
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 50
+X-RateLimit-Remaining: 0
+Retry-After: 3600
+
+{
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Maximum 50 requests per hour allowed.",
+  "retryAfter": 3600
+}
+```
+
+### Input Validation & Sanitization
+
+- **XSS Prevention**: HTML escaping on all user inputs
+- **Max Length**: 500 characters per field
+- **Pattern Matching**: Rejects suspicious patterns:
+  - `<script>`, `javascript:`, `onerror`, `onclick`, `<iframe>`, `eval`
+
+### Security Headers (Helmet.js)
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; ...
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+```
+
+### HTTPS in Production
+
+Recommended: Use behind a reverse proxy (nginx, Caddy) with HTTPS.
+
+---
+
+## 📊 Rate Limiting Details
+
+### How It Works
+
+1. **Request arrives** → Middleware extracts IP and session ID
+2. **Check MongoDB** → Count requests from this identifier in last hour
+3. **Limit check** → If count >= 50, return 429
+4. **Allow request** → Record timestamp in database
+5. **Database cleanup** → TTL index auto-deletes records after 1 hour
+
+### Resetting Limits
+
+Limits automatically reset after 1 hour. No admin action needed.
+
+To manually reset (if needed):
+```bash
+# Connect to MongoDB
+mongo doj-auto-fillup
+
+# Clear rate limit collection
+db.rate_limit.deleteMany({})
+```
+
+---
+
+## 📁 Project Structure
+
+```
+DOJ_Auto-FIllup_System/
+├── server.js                    # Main Express entry point
+├── package.json                 # Dependencies & scripts
+├── .env.example                 # Environment template
+├── .gitignore                   # Git ignore rules
+│
+├── views/                       # EJS Templates
+│   ├── index.ejs                # Main layout
+│   └── partials/
+│       ├── header.ejs
+│       ├── sidebar.ejs
+│       ├── footer.ejs
+│       ├── modals.ejs
+│       ├── overlay.ejs
+│       └── forms/
+│           ├── birth.ejs
+│           ├── marriage.ejs
+│           ├── business.ejs
+│           ├── origland.ejs
+│           └── transferland.ejs
+│
+├── public/                      # Static files (served to client)
+│   ├── css/
+│   │   └── style.css            # Main stylesheet
+│   ├── js/
+│   │   ├── app.js               # Client-side app logic
+│   │   └── script.js            # Original script (backup)
+│   └── assets/
+│       ├── doj.png
+│       ├── lossantos.webp
+│       ├── birthcert.png
+│       ├── marriagecert.png
+│       ├── business permit.png
+│       ├── business permitLE.png
+│       ├── origcert_title.jpg
+│       └── transfercert_title.jpg
+│
+├── middleware/                  # Express middleware
+│   ├── rateLimit.js             # Rate limiting (50/hour)
+│   └── security.js              # Security headers, input validation
+│
+├── routes/                      # Express routes
+│   ├── index.js                 # GET /
+│   ├── api.js                   # POST /api/generate, GET /api/status
+│   └── health.js                # GET /health
+│
+├── config/                      # Configuration
+│   └── constants.js             # Fields, dimensions, validation rules
+│
+├── utils/                       # Utilities (future use)
+│   └── [validators.js]
+│
+├── README.md                    # This file
+└── LICENSE                      # MIT License
+```
+
+---
+
+## 🛠️ Technologies
+
+### Backend
+- **Express.js** - Web framework
+- **EJS** - Templating engine
+- **MongoDB** - Rate limiting storage (optional)
+- **Helmet.js** - Security headers
+- **express-validator** - Input validation
+- **Morgan** - HTTP logging
+- **Compression** - Response compression
+
+### Frontend
+- **HTML5** - Markup
+- **CSS3** - Styling (responsive design)
+- **Vanilla JavaScript** - Canvas rendering, form handling
+- **Canvas 2D API** - Document rendering
+- **Font Awesome 6.4** - Icons
+
+### Scripts
+- `npm start` - Production server
+- `npm run dev` - Development with live reload
+- `npm test` - Run tests (when added)
+
+---
+
+## 🐛 Troubleshooting
+
+### Port Already in Use
+```bash
+# Check what's using port 3000
+lsof -i :3000
+
+# Use different port
+PORT=3001 npm start
+```
+
+### MongoDB Connection Failed
+```
+⚠ MongoDB not available, rate limiting will be skipped
+```
+This is normal! Server still works, just rate limiting is temporarily off-memory.
+
+### EACCES Permission Denied
+```bash
+# Fix permissions on Linux/Mac
+sudo chown -R $(whoami) ~/.npm
+npm install
+```
+
+### Canvas Import Issues
+Canvas dependency was removed (client-side rendering only). If you see canvas errors, delete `node_modules` and reinstall.
+
+### CORS Errors
+If frontend makes cross-domain requests, configure CORS in `server.js`:
+```javascript
+const cors = require('cors');
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
+```
+
+---
+
+## 📝 License
+
+MIT License © 2025 KWTS
+
+Permission granted to use, modify, and distribute for non-commercial purposes. Proper credit required.
+
+---
+
+## 📞 Support
+
+- **Issues**: Open a GitHub issue
+- **Features**: Submit pull requests
+- **Questions**: Check troubleshooting section
+
+---
+
+## 🎯 Roadmap
+
+- [ ] PDF export (instead of PNG only)
+- [ ] MongoDB Atlas integration guide
+- [ ] Docker deployment guide
+- [ ] Database persistence for user history
+- [ ] Custom template upload
+- [ ] Admin dashboard
+- [ ] User authentication
+- [ ] Batch document generation
+- [ ] API key system for programmatic access
+
+---
+
+**Last Updated:** March 26, 2025
+**Version:** 2.0.0
+**Status:** Production Ready

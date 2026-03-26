@@ -1,0 +1,202 @@
+<!-- Birth Certificate Form -->
+<section class="form-section active" id="birth-certificate-section">
+    <div class="section-header">
+        <h2><i class="fas fa-baby"></i> Birth Certificate</h2>
+        <button class="collapse-all-btn" data-target="birth">
+            <i class="fas fa-compress-alt"></i> Collapse All
+        </button>
+    </div>
+    <form id="birth-certificate-form">
+        <!-- Certificate Numbers -->
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="cert-numbers">
+                <h3><i class="fas fa-hashtag"></i> Certificate Numbers</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="cert-numbers">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="state_file_num">State File Number</label>
+                        <input type="text" id="state_file_num" name="state_file_num" placeholder="Enter state file number" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="local_reg_num">Local Registration Number</label>
+                        <input type="text" id="local_reg_num" name="local_reg_num" placeholder="Enter local registration number" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Child Information -->
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="child-info">
+                <h3><i class="fas fa-child"></i> Child Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="child-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="name_first">First Name</label>
+                        <input type="text" id="name_first" name="name_first" placeholder="First name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="name_middle">Middle Name</label>
+                        <input type="text" id="name_middle" name="name_middle" placeholder="Middle name">
+                    </div>
+                    <div class="form-field">
+                        <label for="name_last">Last Name</label>
+                        <input type="text" id="name_last" name="name_last" placeholder="Last name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="sex">Sex</label>
+                        <select id="sex" name="sex" required>
+                            <option value="">Select...</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="birth_type">Type of Birth</label>
+                        <input type="text" id="birth_type" name="birth_type" placeholder="Single, Twin, etc.">
+                    </div>
+                    <div class="form-field">
+                        <label for="birth_weight">If Multiple (1st, 2nd)</label>
+                        <input type="text" id="birth_weight" name="birth_weight" placeholder="Order if multiple">
+                    </div>
+                    <div class="form-field">
+                        <label for="date_birth">Date of Birth</label>
+                        <input type="date" id="date_birth" name="date_birth" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="birth_time">Time of Birth (24hr)</label>
+                        <input type="time" id="birth_time" name="birth_time">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Place of Birth -->
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="birth-place">
+                <h3><i class="fas fa-hospital"></i> Place of Birth</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="birth-place">
+                <div class="form-grid">
+                    <div class="form-field full-width">
+                        <label for="birth_place">Hospital or Facility Name</label>
+                        <input type="text" id="birth_place" name="birth_place" placeholder="Enter hospital/facility name" required>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="birth_address">Street Address</label>
+                        <input type="text" id="birth_address" name="birth_address" placeholder="Enter street address">
+                    </div>
+                    <div class="form-field">
+                        <label for="birth_city">City</label>
+                        <input type="text" id="birth_city" name="birth_city" placeholder="City" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="birth_state">State</label>
+                        <input type="text" id="birth_state" name="birth_state" placeholder="State" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mother Information -->
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="mother-info">
+                <h3><i class="fas fa-female"></i> Mother Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="mother-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="mother_name">First Name</label>
+                        <input type="text" id="mother_name" name="mother_name" placeholder="First name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="mother_middle">Middle Name</label>
+                        <input type="text" id="mother_middle" name="mother_middle" placeholder="Middle name">
+                    </div>
+                    <div class="form-field">
+                        <label for="mother_last">Last Name</label>
+                        <input type="text" id="mother_last" name="mother_last" placeholder="Last name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="mother_bop">Place of Birth (State/Country)</label>
+                        <input type="text" id="mother_bop" name="mother_bop" placeholder="State or country" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="mother_birth">Date of Birth</label>
+                        <input type="date" id="mother_birth" name="mother_birth" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Father Information -->
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="father-info">
+                <h3><i class="fas fa-male"></i> Father Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="father-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="father_name">First Name</label>
+                        <input type="text" id="father_name" name="father_name" placeholder="First name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="father_middle">Middle Name</label>
+                        <input type="text" id="father_middle" name="father_middle" placeholder="Middle name">
+                    </div>
+                    <div class="form-field">
+                        <label for="father_last">Last Name</label>
+                        <input type="text" id="father_last" name="father_last" placeholder="Last name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="father_bop">Place of Birth (State/Country)</label>
+                        <input type="text" id="father_bop" name="father_bop" placeholder="State or country" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="father_birth">Date of Birth</label>
+                        <input type="date" id="father_birth" name="father_birth" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issuer Information -->
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="issuer-info">
+                <h3><i class="fas fa-user-tie"></i> Issuer Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="issuer-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="issuer_name">Full Name of Issuer</label>
+                        <input type="text" id="issuer_name" name="issuer_name" placeholder="Enter full name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="issuer_occupation">Occupation</label>
+                        <input type="text" id="issuer_occupation" name="issuer_occupation" placeholder="Occupation">
+                    </div>
+                    <div class="form-field">
+                        <label for="issuer_signature">Signature</label>
+                        <input type="text" id="issuer_signature" name="issuer_signature" placeholder="Signature" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="registration_date">Date of Registration</label>
+                        <input type="date" id="registration_date" name="registration_date" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            <i class="fas fa-file-download"></i> Generate Certificate
+        </button>
+    </form>
+</section>

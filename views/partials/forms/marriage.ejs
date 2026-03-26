@@ -1,0 +1,267 @@
+<!-- Marriage Certificate Form - Simplified -->
+<section class="form-section" id="marriage-certificate-section">
+    <div class="section-header">
+        <h2><i class="fas fa-ring"></i> Marriage Certificate</h2>
+        <button class="collapse-all-btn" data-target="marriage">
+            <i class="fas fa-compress-alt"></i> Collapse All
+        </button>
+    </div>
+    <form id="marriage-certificate-form">
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="marriage-cert-numbers">
+                <h3><i class="fas fa-hashtag"></i> Certificate Numbers</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="marriage-cert-numbers">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="marriage_state_file_num">State File Number</label>
+                        <input type="text" id="marriage_state_file_num" name="marriage_state_file_num" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="marriage_local_reg_num">Local Registration Number</label>
+                        <input type="text" id="marriage_local_reg_num" name="marriage_local_reg_num" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="groom-info">
+                <h3><i class="fas fa-male"></i> Groom Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="groom-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="groom_first">First Name</label>
+                        <input type="text" id="groom_first" name="groom_first" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_middle">Middle Name</label>
+                        <input type="text" id="groom_middle" name="groom_middle" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_last">Last Name</label>
+                        <input type="text" id="groom_last" name="groom_last" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_dob">Date of Birth</label>
+                        <input type="date" id="groom_dob" name="groom_dob" required>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="groom_address">Street Address</label>
+                        <input type="text" id="groom_address" name="groom_address" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_city">City</label>
+                        <input type="text" id="groom_city" name="groom_city" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_birthplace">State of Birth</label>
+                        <input type="text" id="groom_birthplace" name="groom_birthplace" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_marriages">Number of Marriages</label>
+                        <input type="text" id="groom_marriages" name="groom_marriages" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_occupation">Occupation</label>
+                        <input type="text" id="groom_occupation" name="groom_occupation" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_business">Business/Industry</label>
+                        <input type="text" id="groom_business" name="groom_business" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_education">Education (Years)</label>
+                        <input type="text" id="groom_education" name="groom_education" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_parent1">Parent 1 Full Name</label>
+                        <input type="text" id="groom_parent1" name="groom_parent1" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_parent1_birthplace">Parent 1 Birthplace</label>
+                        <input type="text" id="groom_parent1_birthplace" name="groom_parent1_birthplace" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_parent2">Parent 2 Full Name</label>
+                        <input type="text" id="groom_parent2" name="groom_parent2" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="groom_parent2_birthplace">Parent 2 Birthplace</label>
+                        <input type="text" id="groom_parent2_birthplace" name="groom_parent2_birthplace" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="bride-info">
+                <h3><i class="fas fa-female"></i> Bride Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="bride-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="bride_first">First Name</label>
+                        <input type="text" id="bride_first" name="bride_first" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_middle">Middle Name</label>
+                        <input type="text" id="bride_middle" name="bride_middle" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_last">Last Name</label>
+                        <input type="text" id="bride_last" name="bride_last" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_dob">Date of Birth</label>
+                        <input type="date" id="bride_dob" name="bride_dob" required>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="bride_address">Street Address</label>
+                        <input type="text" id="bride_address" name="bride_address" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_city">City</label>
+                        <input type="text" id="bride_city" name="bride_city" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_birthplace">State of Birth</label>
+                        <input type="text" id="bride_birthplace" name="bride_birthplace" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_marriages">Number of Marriages</label>
+                        <input type="text" id="bride_marriages" name="bride_marriages" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_occupation">Occupation</label>
+                        <input type="text" id="bride_occupation" name="bride_occupation" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_business">Business/Industry</label>
+                        <input type="text" id="bride_business" name="bride_business" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_education">Education (Years)</label>
+                        <input type="text" id="bride_education" name="bride_education" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_parent1">Parent 1 Full Name</label>
+                        <input type="text" id="bride_parent1" name="bride_parent1" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_parent1_birthplace">Parent 1 Birthplace</label>
+                        <input type="text" id="bride_parent1_birthplace" name="bride_parent1_birthplace" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_parent2">Parent 2 Full Name</label>
+                        <input type="text" id="bride_parent2" name="bride_parent2" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_parent2_birthplace">Parent 2 Birthplace</label>
+                        <input type="text" id="bride_parent2_birthplace" name="bride_parent2_birthplace" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="affidavit-info">
+                <h3><i class="fas fa-signature"></i> Affidavit</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="affidavit-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="groom_signature">Groom Signature</label>
+                        <input type="text" id="groom_signature" name="groom_signature" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="bride_signature">Bride Signature</label>
+                        <input type="text" id="bride_signature" name="bride_signature" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="marriage-details">
+                <h3><i class="fas fa-heart"></i> Marriage Details</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="marriage-details">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="marriage_date">Date of Marriage</label>
+                        <input type="date" id="marriage_date" name="marriage_date" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="marriage_place">Place of Marriage</label>
+                        <input type="text" id="marriage_place" name="marriage_place" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="marriage_city">City</label>
+                        <input type="text" id="marriage_city" name="marriage_city" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="marriage_state">State</label>
+                        <input type="text" id="marriage_state" name="marriage_state" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="officiant-info">
+                <h3><i class="fas fa-user-tie"></i> Officiant Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="officiant-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="officiant_name">Officiant Name</label>
+                        <input type="text" id="officiant_name" name="officiant_name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="officiant_occupation">Occupation</label>
+                        <input type="text" id="officiant_occupation" name="officiant_occupation" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="witness-info">
+                <h3><i class="fas fa-users"></i> Witnesses Details</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="witness-info">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="witness1_signature">Witness 1 Signature</label>
+                        <input type="text" id="witness1_signature" name="witness1_signature" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="witness1_name">Witness 1 Name</label>
+                        <input type="text" id="witness1_name" name="witness1_name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="witness2_signature">Witness 2 Signature</label>
+                        <input type="text" id="witness2_signature" name="witness2_signature" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="witness2_name">Witness 2 Name</label>
+                        <input type="text" id="witness2_name" name="witness2_name" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            <i class="fas fa-file-download"></i> Generate Certificate
+        </button>
+    </form>
+</section>

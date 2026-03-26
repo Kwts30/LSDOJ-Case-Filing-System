@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .profile-header h1 {
+            color: #6b3a0b;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-avatar {
+            font-size: 4rem;
+            color: #6b3a0b;
+            margin-bottom: 1rem;
+        }
+
+        .profile-field {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 6px;
+        }
+
+        .profile-field label {
+            font-weight: 600;
+            color: #666;
+            min-width: 120px;
+        }
+
+        .profile-field value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .profile-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            background: <%= user.role === 'admin' ? '#e74c3c' : '#2ecc71' %>;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #0d2c53;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #174a8c;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #4a2507 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h1><%= user.firstName %> <%= user.lastName %></h1>
+            <span class="profile-badge"><%= user.role === 'admin' ? 'Administrator' : 'User' %></span>
+        </div>
+
+        <div class="profile-field">
+            <label>Username:</label>
+            <value><%= user.username %></value>
+        </div>
+
+        <div class="profile-field">
+            <label>Email:</label>
+            <value><%= user.email %></value>
+        </div>
+
+        <div class="profile-field">
+            <label>Role:</label>
+            <value>
+                <% if (user.role === 'admin') { %>
+                    <span style="color: #e74c3c;">Administrator</span>
+                <% } else { %>
+                    <span style="color: #2ecc71;">User</span>
+                <% } %>
+            </value>
+        </div>
+
+        <div class="button-group">
+            <form action="/" method="GET" style="flex: 1;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i> Back to App
+                </button>
+            </form>
+
+            <form action="/auth/logout" method="POST" style="flex: 1;">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+        </div>
+
+        <% if (user.role === 'admin') { %>
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+                <h3 style="color: #6b3a0b; margin-bottom: 1rem;">Admin Options</h3>
+                <a href="/admin/dashboard" style="display: block; padding: 12px; background: #0d2c53; color: white; border-radius: 6px; text-align: center; text-decoration: none; font-weight: 600; margin-bottom: 0.5rem;">
+                    <i class="fas fa-chart-line"></i> Admin Dashboard
+                </a>
+                <a href="/admin/users" style="display: block; padding: 12px; background: #6b3a0b; color: white; border-radius: 6px; text-align: center; text-decoration: none; font-weight: 600;">
+                    <i class="fas fa-users"></i> Manage Users
+                </a>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

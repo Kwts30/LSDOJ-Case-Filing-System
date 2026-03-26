@@ -1,0 +1,64 @@
+<!-- Transfer Land Title Form -->
+<section class="form-section" id="transferland-title-section">
+    <div class="section-header">
+        <h2><i class="fas fa-exchange-alt"></i> Transfer Land Title</h2>
+        <button class="collapse-all-btn" data-target="transferland">
+            <i class="fas fa-compress-alt"></i> Collapse All
+        </button>
+    </div>
+    <form id="transferland-title-form">
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="transferland-info">
+                <h3><i class="fas fa-info-circle"></i> Title Information</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="transferland-info">
+                <div class="form-grid">
+                    <div class="form-field full-width">
+                        <label for="trans_full_name">Full Name</label>
+                        <input type="text" id="trans_full_name" name="trans_full_name" required>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="trans_full_address">Full Address</label>
+                        <input type="text" id="trans_full_address" name="trans_full_address" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="trans_land_title_number">Land Title Number</label>
+                        <input type="text" id="trans_land_title_number" name="trans_land_title_number" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="trans_orig_land_title_number">Original Land Title Number</label>
+                        <input type="text" id="trans_orig_land_title_number" name="trans_orig_land_title_number" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="form-group-header" data-toggle="transferland-date">
+                <h3><i class="fas fa-calendar-alt"></i> Date of Issuance</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="form-group-content open" id="transferland-date">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="trans_issue_month">Month</label>
+                        <input type="text" id="trans_issue_month" name="trans_issue_month" placeholder="e.g. January" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="trans_issue_day">Day</label>
+                        <input type="text" id="trans_issue_day" name="trans_issue_day" placeholder="e.g. 15" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="trans_issue_year">Year</label>
+                        <input type="text" id="trans_issue_year" name="trans_issue_year" placeholder="e.g. 2025" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            <i class="fas fa-file-download"></i> Generate Transfer Title
+        </button>
+    </form>
+</section>

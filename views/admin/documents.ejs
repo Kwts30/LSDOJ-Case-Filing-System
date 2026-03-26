@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        table { width: 100%; border-collapse: collapse; background: white; margin: 1rem 0; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { background: #f9f9f9; font-weight: 600; }
+        .btn { padding: 0.5rem 1rem; background: #6b3a0b; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <%- include('../partials/header') %>
+    <div class="admin-container">
+        <h1><i class="fas fa-file"></i> Generated Documents</h1>
+        <p>Total: <%= total %> | Page: <%= page %> of <%= pages %></p>
+        
+        <table>
+            <tr>
+                <th>Type</th>
+                <th>Issuer</th>
+                <th>Client</th>
+                <th>Created</th>
+            </tr>
+            <% documents.forEach(doc => { %>
+                <tr>
+                    <td><%= doc.documentType %></td>
+                    <td><%= doc.issuerName %></td>
+                    <td><%= doc.clientName %></td>
+                    <td><%= new Date(doc.createdAt).toLocaleString() %></td>
+                </tr>
+            <% }); %>
+        </table>
+
+        <div>
+            <% if (page > 1) { %>
+                <a href="?page=<%= page-1 %>" class="btn">Previous</a>
+            <% } %>
+            <% if (page < pages) { %>
+                <a href="?page=<%= page+1 %>" class="btn">Next</a>
+            <% } %>
+        </div>
+
+        <a href="/admin/dashboard" class="btn"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+</body>
+</html>
