@@ -1,100 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title><%= title %></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .admin-container { max-width: 600px; margin: 0 auto; padding: 2rem; }
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333; }
-        input, select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
-        input:focus, select:focus { outline: none; border-color: #6b3a0b; box-shadow: 0 0 0 3px rgba(107,58,11,0.1); }
-        .btn { padding: 0.8rem 1.5rem; background: #6b3a0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
-        .btn-danger { background: #e74c3c; }
-        .button-group { display: flex; gap: 1rem; margin-top: 2rem; }
-    </style>
+    <script src="/js/theme.js"></script>
 </head>
 <body>
     <%- include('../partials/header') %>
-    <div class="admin-container">
-        <h1><i class="fas fa-edit"></i> Edit User</h1>
 
-        <form id="editUserForm">
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" value="<%= editUser.username %>" disabled style="background: #f9f9f9; cursor: not-allowed;">
-            </div>
+    <div class="main-layout">
+        <%- include('../partials/sidebar') %>
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <div class="page-header-text">
+                        <h1>
+                            <span class="material-icons">edit</span>
+                            Edit User
+                        </h1>
+                        <p>Editing account: <strong><%= editUser.username %></strong></p>
+                    </div>
+                    <div class="page-header-actions">
+                        <a href="/admin/users" class="btn btn-outline">
+                            <span class="material-icons">arrow_back</span>
+                            Back
+                        </a>
+                    </div>
+                </div>
 
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" value="<%= editUser.email %>" required>
-            </div>
+                <div class="card" style="max-width:700px;">
+                    <div class="card-body">
+                        <form id="editUserForm">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" value="<%= editUser.username %>" disabled>
+                            </div>
 
-            <div class="form-group">
-                <label for="firstName">First Name</label>
-                <input type="text" id="firstName" name="firstName" value="<%= editUser.firstName %>">
-            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" value="<%= editUser.email %>" required>
+                            </div>
 
-            <div class="form-group">
-                <label for="lastName">Last Name</label>
-                <input type="text" id="lastName" name="lastName" value="<%= editUser.lastName %>">
-            </div>
+                            <div class="grid grid-2">
+                                <div class="form-group">
+                                    <label for="firstName">First Name</label>
+                                    <input type="text" id="firstName" name="firstName" value="<%= editUser.first_name || editUser.firstName || '' %>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Last Name</label>
+                                    <input type="text" id="lastName" name="lastName" value="<%= editUser.last_name || editUser.lastName || '' %>">
+                                </div>
+                            </div>
 
-            <div class="form-group">
-                <label for="role">Role</label>
-                <select id="role" name="role" required>
-                    <option value="user" <%= editUser.role === 'user' ? 'selected' : '' %>>User</option>
-                    <option value="admin" <%= editUser.role === 'admin' ? 'selected' : '' %>>Admin</option>
-                </select>
-            </div>
+                            <div class="form-group">
+                                <label for="role">Role</label>
+                                <select id="role" name="role" required>
+                                    <option value="user" <%= editUser.role === 'user' ? 'selected' : '' %>>User</option>
+                                    <option value="admin" <%= editUser.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                </select>
+                            </div>
 
-            <div class="form-group">
-                <label for="isActive">Status</label>
-                <select id="isActive" name="isActive">
-                    <option value="true" <%= editUser.isActive ? 'selected' : '' %>>Active</option>
-                    <option value="false" <%= !editUser.isActive ? 'selected' : '' %>>Inactive</option>
-                </select>
-            </div>
+                            <div class="form-group">
+                                <label for="isActive">Status</label>
+                                <select id="isActive" name="isActive">
+                                    <option value="true" <%= (editUser.is_active ?? editUser.isActive) ? 'selected' : '' %>>Active</option>
+                                    <option value="false" <%= !(editUser.is_active ?? editUser.isActive) ? 'selected' : '' %>>Inactive</option>
+                                </select>
+                            </div>
 
-            <div class="button-group">
-                <button type="submit" class="btn"><i class="fas fa-save"></i> Save Changes</button>
-                <button type="button" class="btn btn-danger" onclick="deleteUser()"><i class="fas fa-trash"></i> Deactivate</button>
-                <a href="/admin/users" class="btn" style="background: #666; text-decoration: none; display: flex; align-items: center; justify-content: center;"><i class="fas fa-arrow-left"></i> Cancel</a>
+                            <div class="flex mt-md">
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="material-icons">save</span>
+                                    Save Changes
+                                </button>
+                                <button type="button" class="btn btn-error" onclick="deactivateUser()">
+                                    <span class="material-icons">block</span>
+                                    Deactivate
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </form>
+        </main>
     </div>
+
+    <%- include('../partials/footer') %>
 
     <script>
         document.getElementById('editUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const data = new FormData(document.getElementById('editUserForm'));
-            const obj = Object.fromEntries(data);
-
+            const obj = Object.fromEntries(new FormData(e.target).entries());
             try {
-                const response = await fetch('/admin/users/<%= editUser._id %>', {
+                const res = await fetch('/admin/users/<%= editUser._id %>', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(obj)
                 });
-                const result = await response.json();
+                await res.json();
                 alert('User updated successfully!');
                 window.location.href = '/admin/users';
-            } catch (error) {
-                alert('Error updating user: ' + error.message);
-            }
+            } catch (err) { alert('Error: ' + err.message); }
         });
 
-        async function deleteUser() {
+        async function deactivateUser() {
             if (!confirm('Are you sure you want to deactivate this user?')) return;
             try {
-                const response = await fetch('/admin/users/<%= editUser._id %>', { method: 'DELETE' });
-                const result = await response.json();
+                await fetch('/admin/users/<%= editUser._id %>', { method: 'DELETE' });
                 alert('User deactivated successfully!');
                 window.location.href = '/admin/users';
-            } catch (error) {
-                alert('Error deactivating user: ' + error.message);
-            }
+            } catch (err) { alert('Error: ' + err.message); }
         }
     </script>
 </body>

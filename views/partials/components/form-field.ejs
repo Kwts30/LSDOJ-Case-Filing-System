@@ -1,0 +1,21 @@
+<!-- Reusable Form Field Component -->
+<!-- Usage: <%- include('partials/components/form-field', { label, id, name, type, placeholder, required, options }) %> -->
+
+<div class="form-field<% if (locals.fullWidth) { %> full-width<% } %>">
+    <label for="<%= locals.id %>"><%= locals.label %></label>
+    
+    <% if (locals.type === 'select') { %>
+        <select id="<%= locals.id %>" name="<%= locals.name %>" <% if (locals.required) { %>required<% } %>>
+            <option value="">Select...</option>
+            <% if (locals.options && Array.isArray(locals.options)) { %>
+                <% locals.options.forEach(opt => { %>
+                    <option value="<%= opt %>"><%= opt %></option>
+                <% }); %>
+            <% } %>
+        </select>
+    <% } else if (locals.type === 'textarea') { %>
+        <textarea id="<%= locals.id %>" name="<%= locals.name %>" placeholder="<%= locals.placeholder || '' %>" <% if (locals.required) { %>required<% } %>></textarea>
+    <% } else { %>
+        <input type="<%= locals.type || 'text' %>" id="<%= locals.id %>" name="<%= locals.name %>" placeholder="<%= locals.placeholder || '' %>" <% if (locals.required) { %>required<% } %>>
+    <% } %>
+</div>

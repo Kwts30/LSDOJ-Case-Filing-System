@@ -53,6 +53,7 @@ async function startServer() {
 
   // Static files - serve assets without rate limiting
   app.use(express.static(path.join(__dirname, 'public')));
+  app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
   // Body parsers
   app.use(express.json({ limit: '10mb' }));
@@ -78,9 +79,6 @@ async function startServer() {
   // ===== User Context for EJS =====
   const { setUserContext } = require('./middleware/auth');
   app.use(setUserContext);
-
-  // ===== Rate Limiting Middleware =====
-  app.use(rateLimitMiddleware);
 
   // ===== Routes =====
 

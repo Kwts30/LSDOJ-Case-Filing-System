@@ -3,68 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>Admin Dashboard — Department of Justice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
-        .stat-card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .stat-card h3 { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .stat-number { font-size: 2.5rem; font-weight: 700; color: #6b3a0b; }
-        .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
-        .section { margin-bottom: 3rem; }
-        .section h2 { color: #6b3a0b; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: #f9f9f9; padding: 1rem; text-align: left; font-weight: 600; color: #666; border-bottom: 2px solid #e0e0e0; }
-        td { padding: 1rem; border-bottom: 1px solid #e0e0e0; }
-        .btn { padding: 0.5rem 1rem; background: #6b3a0b; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
-    </style>
+    <script src="/js/theme.js"></script>
 </head>
 <body>
     <%- include('../partials/header') %>
-    <div class="admin-container">
-        <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
-        
-        <div class="dashboard-grid">
-            <div class="stat-card">
-                <h3>Total Users</h3>
-                <div class="stat-number"><%= stats.totalUsers %></div>
-            </div>
-            <div class="stat-card">
-                <h3>Active Users</h3>
-                <div class="stat-number"><%= stats.activeUsers %></div>
-            </div>
-            <div class="stat-card">
-                <h3>Generated Documents</h3>
-                <div class="stat-number"><%= stats.totalDocuments %></div>
-            </div>
-            <div class="stat-card">
-                <h3>Activity Logs</h3>
-                <div class="stat-number"><%= stats.totalLogs %></div>
-            </div>
-        </div>
 
-        <div class="section">
-            <h2>Documents by Type</h2>
-            <table>
-                <tr><th>Document Type</th><th>Count</th></tr>
-                <% documentsByType.forEach(doc => { %>
-                    <tr><td><%= doc._id %></td><td><%= doc.count %></td></tr>
-                <% }); %>
-            </table>
-        </div>
+    <div class="main-layout">
+        <%- include('../partials/sidebar') %>
 
-        <div class="section">
-            <h2>Quick Links</h2>
-            <a href="/admin/documents" class="btn"><i class="fas fa-file"></i> View Documents</a>
-            <a href="/admin/activity-logs" class="btn"><i class="fas fa-list"></i> Activity Logs</a>
-            <a href="/admin/reports" class="btn"><i class="fas fa-chart-bar"></i> Reports</a>
-            <a href="/admin/users" class="btn"><i class="fas fa-users"></i> Manage Users</a>
-        </div>
+        <main class="main-content">
+            <div class="container">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="page-header-text">
+                        <h1>
+                            <span class="material-icons">dashboard</span>
+                            Admin Dashboard
+                        </h1>
+                        <p>System overview and management</p>
+                    </div>
+                    <div class="page-header-actions">
+                        <button class="btn btn-secondary flex" onclick="location.reload()">
+                            <span class="material-icons">refresh</span>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
 
-        <div style="margin-top: 3rem;">
-            <a href="/" class="btn"><i class="fas fa-arrow-left"></i> Back to App</a>
-        </div>
+                <!-- Key Metrics -->
+                <div class="grid grid-4 mb-xl">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <span class="material-icons stat-icon" style="color:var(--color-secondary);">group</span>
+                            <span class="stat-value"><%= stats?.totalUsers || 0 %></span>
+                            <span class="stat-label">Total Users</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <span class="material-icons stat-icon" style="color:var(--color-primary);">description</span>
+                            <span class="stat-value"><%= stats?.totalDocuments || 0 %></span>
+                            <span class="stat-label">Documents Generated</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <span class="material-icons stat-icon" style="color:var(--color-success);">check_circle</span>
+                            <span class="stat-value"><%= stats?.activeUsers || 0 %></span>
+                            <span class="stat-label">Active Users</span>
+                        </div>
+                    </div>
+
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <span class="material-icons stat-icon" style="color:var(--color-info);">manage_search</span>
+                            <span class="stat-value"><%= stats?.totalLogs || 0 %></span>
+                            <span class="stat-label">Audit Logs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management Sections -->
+                <div class="grid grid-2 mb-xl">
+                    <!-- Recent Documents -->
+                    <div class="card">
+                        <div class="card-header flex">
+                            <span class="material-icons" style="color:var(--color-primary);">history</span>
+                            <h3 style="margin:0;">Recent Documents</h3>
+                        </div>
+                        <div class="card-body" style="max-height:300px;overflow-y:auto;">
+                            <% if (recentDocuments && recentDocuments.length) { %>
+                                <table class="table-clean">
+                                    <tbody>
+                                    <% recentDocuments.slice(0, 5).forEach(doc => { %>
+                                        <tr>
+                                            <td>
+                                                <strong><%= doc.doc_type || doc.documentType || 'Document' %></strong>
+                                                <div class="text-tertiary" style="font-size:var(--font-size-xs);">
+                                                    <%= new Date(doc.created_at || doc.createdAt || Date.now()).toLocaleString() %>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                    </tbody>
+                                </table>
+                            <% } else { %>
+                                <div class="text-center text-tertiary" style="padding:var(--space-2xl) 0;">
+                                    <span class="material-icons" style="font-size:2rem;display:block;margin-bottom:var(--space-md);opacity:0.5;">folder_open</span>
+                                    No documents yet
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="/admin/documents" class="flex flex-center gap-md" style="color:var(--color-secondary);font-weight:var(--font-weight-semibold);">
+                                View All <span class="material-icons" style="font-size:1rem;">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recent Users -->
+                    <div class="card">
+                        <div class="card-header flex">
+                            <span class="material-icons" style="color:var(--color-secondary);">group</span>
+                            <h3 style="margin:0;">User Overview</h3>
+                        </div>
+                        <div class="card-body" style="max-height:300px;overflow-y:auto;">
+                            <% if ((stats?.activeUsers || 0) > 0) { %>
+                                <div class="text-center text-secondary" style="padding:var(--space-2xl) 0;">
+                                    <span class="material-icons" style="font-size:2rem;display:block;margin-bottom:var(--space-md);">group</span>
+                                    <strong><%= stats?.activeUsers || 0 %></strong> active users in system
+                                </div>
+                            <% } else { %>
+                                <div class="text-center text-tertiary" style="padding:var(--space-2xl) 0;">
+                                    <span class="material-icons" style="font-size:2rem;display:block;margin-bottom:var(--space-md);opacity:0.5;">person</span>
+                                    No users yet
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="/admin/users" class="flex flex-center gap-md" style="color:var(--color-secondary);font-weight:var(--font-weight-semibold);">
+                                Manage Users <span class="material-icons" style="font-size:1rem;">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Table -->
+                <div class="card">
+                    <div class="card-header flex">
+                        <span class="material-icons" style="color:var(--color-primary);">info</span>
+                        <h3 style="margin:0;">System Activity</h3>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="table-clean">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (recentActivity && recentActivity.length) { %>
+                                    <% recentActivity.slice(0, 8).forEach(log => { %>
+                                        <tr>
+                                            <td><%= new Date(log.timestamp || Date.now()).toLocaleString() %></td>
+                                            <td><%= log.user_id || log.userId || '—' %></td>
+                                            <td><%= log.action || '—' %></td>
+                                            <td>
+                                                <span class="badge badge-<%= log.result === 'error' ? 'error' : 'success' %>">
+                                                    <%= log.result || 'success' %>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="4" class="text-center text-tertiary" style="padding:var(--space-3xl);">No activity yet</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="/admin/activity-logs" class="flex flex-center gap-md" style="color:var(--color-secondary);font-weight:var(--font-weight-semibold);">
+                            View Full Logs <span class="material-icons" style="font-size:1rem;">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
+
+    <%- include('../partials/footer') %>
 </body>
 </html>

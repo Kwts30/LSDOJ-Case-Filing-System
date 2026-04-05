@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const { getDatabase, ObjectId } = require('../utils/db');
 const { verifyPassword, hashPassword, logActivity, generateToken } = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
 
 // GET /auth/login - Render login page
 router.get('/login', (req, res) => {
@@ -32,10 +33,34 @@ router.post('/login', async (req, res) => {
     const db = getDatabase();
     console.log('Attempting login for user:', username);
 
-    const user = await db.collection('users').findOne({
+    let user = await db.collection('users').findOne({
       username: username.toLowerCase(),
-      isActive: true
+      $or: [{ is_active: true }, { isActive: true }]
     });
+
+    // Auto-bootstrap admin from .env on first login if database is empty
+    if (!user) {
+      const adminUsername = (process.env.ADMIN_USERNAME || 'kdelosreyes').toLowerCase();
+      const adminPassword = process.env.ADMIN_PASSWORD || '12345678';
+
+      if (username.toLowerCase() === adminUsername && password === adminPassword) {
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(adminPassword, salt);
+        const created = {
+          username: adminUsername,
+          email: process.env.ADMIN_EMAIL || 'admin@dojsystem.local',
+          password_hash,
+          role: 'admin',
+          first_name: 'Admin',
+          last_name: 'Account',
+          is_active: true,
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+        const result = await db.collection('users').insertOne(created);
+        user = { _id: result.insertedId, ...created };
+      }
+    }
 
     if (!user) {
       console.log('User not found:', username);
@@ -47,7 +72,8 @@ router.post('/login', async (req, res) => {
     }
 
     // Verify password
-    const isPasswordValid = await verifyPassword(password, user.passwordHash);
+    const hash = user.password_hash || user.passwordHash;
+    const isPasswordValid = await verifyPassword(password, hash);
 
     if (!isPasswordValid) {
       console.log('Invalid password for user:', username);
@@ -61,7 +87,7 @@ router.post('/login', async (req, res) => {
     // Update last login
     await db.collection('users').updateOne(
       { _id: user._id },
-      { $set: { lastLogin: new Date() } }
+      { $set: { last_login: new Date(), is_active: true } }
     );
 
     // Set session
@@ -69,8 +95,8 @@ router.post('/login', async (req, res) => {
     req.session.username = user.username;
     req.session.userRole = user.role;
     req.session.userEmail = user.email;
-    req.session.firstName = user.firstName;
-    req.session.lastName = user.lastName;
+    req.session.firstName = user.first_name || user.firstName || '';
+    req.session.lastName = user.last_name || user.lastName || '';
 
     // Log activity
     await logActivity(user._id, 'login', `User ${username} logged in`);
@@ -119,9 +145,92 @@ router.get('/profile', (req, res) => {
       email: req.session.userEmail,
       firstName: req.session.firstName,
       lastName: req.session.lastName,
-      role: req.session.userRole
+      role: req.session.userRole,
+      department: req.session.department || ''
     }
   });
+});
+
+// POST /auth/profile/update - Update user profile
+router.post('/profile/update', async (req, res) => {
+  try {
+    console.log('Profile update request received');
+    console.log('Session userId:', req.session?.userId);
+    console.log('Request body:', req.body);
+
+    if (!req.session || !req.session.userId) {
+      console.log('Not authenticated - no session or userId');
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { firstName, lastName, email, department } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ error: 'First name, last name, and email are required' });
+    }
+
+    console.log('Updating profile for user:', req.session.userId);
+
+    const db = getDatabase();
+    const userId = new ObjectId(req.session.userId);
+
+    // Check if email is already taken by another user
+    const existingUser = await db.collection('users').findOne({
+      email: email.toLowerCase(),
+      _id: { $ne: userId }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already in use by another user' });
+    }
+
+    // Update user profile
+    const updateData = {
+      first_name: firstName,
+      last_name: lastName,
+      email: email.toLowerCase(),
+      department: department || '',
+      updated_at: new Date()
+    };
+
+    const result = await db.collection('users').updateOne(
+      { _id: userId },
+      { $set: updateData }
+    );
+
+    console.log('Update result:', result);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'User not found in database' });
+    }
+
+    // Update session data
+    req.session.firstName = firstName;
+    req.session.lastName = lastName;
+    req.session.userEmail = email.toLowerCase();
+    req.session.department = department || '';
+
+    // Log activity
+    await logActivity(userId, 'update_profile', `Updated profile information`);
+
+    console.log('Profile updated successfully for user:', req.session.userId);
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        firstName,
+        lastName,
+        email,
+        department
+      }
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ error: 'Failed to update profile: ' + error.message });
+  }
 });
 
 // POST /auth/token - Generate JWT token for API access

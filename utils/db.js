@@ -13,9 +13,13 @@ async function initializeDatabase(mongoUri) {
     console.log('Attempting to connect to MongoDB...');
     client = new MongoClient(mongoUri, {
       serverSelectionTimeoutMS: 5000,
-      tls: false  // Disable TLS for local development
+      maxPoolSize: 10,
+      retryWrites: true,
+      // TLS is automatically enabled for mongodb+srv:// URIs
+      tls: mongoUri.includes('mongodb+srv') ? true : false
     });
     await client.connect();
+    await client.db('admin').command({ ping: 1 }); // Test connection
     db = client.db('doj-auto-fillup');
     console.log('✓ Connected to MongoDB Atlas');
 
@@ -23,32 +27,58 @@ async function initializeDatabase(mongoUri) {
     const collections = await db.listCollections().toArray();
     const collectionNames = collections.map(c => c.name);
 
+    // USERS Collection
     if (!collectionNames.includes('users')) {
       await db.createCollection('users');
       await db.collection('users').createIndex({ username: 1 }, { unique: true });
       await db.collection('users').createIndex({ email: 1 }, { unique: true });
     }
 
-    if (!collectionNames.includes('generated_documents')) {
-      await db.createCollection('generated_documents');
-      await db.collection('generated_documents').createIndex({ userId: 1 });
-      await db.collection('generated_documents').createIndex({ createdAt: 1 });
-      await db.collection('generated_documents').createIndex({ documentType: 1 });
+    // SESSIONS Collection (for JWT tokens & auth sessions)
+    if (!collectionNames.includes('sessions')) {
+      await db.createCollection('sessions');
+      await db.collection('sessions').createIndex({ user_id: 1 });
+      await db.collection('sessions').createIndex({ token: 1 }, { unique: true });
+      await db.collection('sessions').createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 });
     }
 
-    if (!collectionNames.includes('activity_logs')) {
-      await db.createCollection('activity_logs');
-      await db.collection('activity_logs').createIndex({ userId: 1 });
-      await db.collection('activity_logs').createIndex({ timestamp: 1 });
-      await db.collection('activity_logs').createIndex({ action: 1 });
+    // DOCUMENTS Collection
+    if (!collectionNames.includes('documents')) {
+      await db.createCollection('documents');
+      await db.collection('documents').createIndex({ user_id: 1 });
+      await db.collection('documents').createIndex({ created_at: 1 });
+      await db.collection('documents').createIndex({ doc_type: 1 });
+    }
+
+    // AUDIT_LOGS Collection (activity tracking)
+    if (!collectionNames.includes('audit_logs')) {
+      await db.createCollection('audit_logs');
+      await db.collection('audit_logs').createIndex({ user_id: 1 });
+      await db.collection('audit_logs').createIndex({ action: 1 });
       // TTL index: auto-delete logs after 90 days
-      await db.collection('activity_logs').createIndex({ timestamp: 1 }, { expireAfterSeconds: 7776000 });
+      try {
+        await db.collection('audit_logs').dropIndex('timestamp_1').catch(() => {});
+      } catch (e) {}
+      await db.collection('audit_logs').createIndex({ timestamp: 1 }, { expireAfterSeconds: 7776000 });
+    } else {
+      // Ensure TTL index exists on existing collection
+      try {
+        const indexes = await db.collection('audit_logs').listIndexes().toArray();
+        const hasTTL = indexes.some(idx => idx.expireAfterSeconds >= 7776000);
+        if (!hasTTL) {
+          try {
+            await db.collection('audit_logs').dropIndex('timestamp_1').catch(() => {});
+            await db.collection('audit_logs').createIndex({ timestamp: 1 }, { expireAfterSeconds: 7776000 });
+          } catch (e) {}
+        }
+      } catch (e) {}
     }
 
+    // RATE_LIMIT Collection (internal utility for rate limiting)
     if (!collectionNames.includes('rate_limit')) {
       await db.createCollection('rate_limit');
-      await db.collection('rate_limit').createIndex('createdAt', { expireAfterSeconds: 3600 });
       await db.collection('rate_limit').createIndex({ identifier: 1 });
+      await db.collection('rate_limit').createIndex({ created_at: 1 }, { expireAfterSeconds: 3600 });
     }
 
     return db;

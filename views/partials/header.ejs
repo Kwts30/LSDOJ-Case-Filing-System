@@ -1,44 +1,51 @@
-<!-- Header partial -->
+<!-- Header Navigation -->
 <header class="header">
-    <div class="header-container">
-        <div class="header-brand">
-            <img src="/assets/doj.png" class="header-logo" alt="Department of Justice Seal">
-            <img src="/assets/lossantos.webp" class="header-logo" alt="City of Los Santos">
-            <div class="header-text">
-                <h1>DEPARTMENT OF JUSTICE</h1>
-                <p>City of Los Santos | State of San Andreas</p>
-            </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
-                <div style="color: white; font-size: 0.9rem;">
-                    <span style="display: block; font-weight: 600;"><%= typeof username !== 'undefined' ? username : '' %></span>
-                    <span style="opacity: 0.8;">
-                        <i class="fas fa-circle" style="color: <%= (typeof userRole !== 'undefined' && userRole === 'admin') ? '#e74c3c' : '#2ecc71' %>; font-size: 0.6rem;"></i>
-                        <%= (typeof userRole !== 'undefined' && userRole === 'admin') ? ' Admin' : ' User' %>
-                    </span>
-                </div>
-            <% } %>
-            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle Menu">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
+  <div class="header-container">
+    <!-- Brand -->
+    <div class="header-brand">
+      <img src="/assets/lossantos.webp" class="header-logo" alt="Los Santos">
+      <img src="/assets/doj.png" class="header-logo" alt="Department of Justice">
+      <div class="header-brand-text">
+        <h1>Department of Justice</h1>
+        <p>City of Los Santos | San Andreas</p>
+      </div>
     </div>
-    <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
-        <div style="background: rgba(0,0,0,0.1); padding: 0.5rem 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
-            <a href="/auth/profile" style="color: white; text-decoration: none; font-size: 0.9rem;">
-                <i class="fas fa-user-circle"></i> Profile
-            </a>
-            <% if (typeof userRole !== 'undefined' && userRole === 'admin') { %>
-                <a href="/admin/dashboard" style="color: white; text-decoration: none; font-size: 0.9rem;">
-                    <i class="fas fa-chart-line"></i> Admin
-                </a>
-            <% } %>
-            <form action="/auth/logout" method="POST" style="display: inline;">
-                <button type="submit" style="background: none; border: none; color: white; cursor: pointer; font-size: 0.9rem; padding: 0;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </form>
+
+    <!-- User Info & Actions -->
+    <div class="header-actions">
+      <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
+        <div class="header-user-info">
+          <div class="username"><%= typeof username !== 'undefined' ? username : 'User' %></div>
+          <div class="role">
+            <span class="material-icons role-icon">
+              <%= (typeof userRole !== 'undefined' && userRole === 'admin') ? 'shield' : 'person' %>
+            </span>
+            <%= (typeof userRole !== 'undefined' && userRole === 'admin') ? 'Admin' : 'User' %>
+          </div>
         </div>
-    <% } %>
+
+        <div class="header-icon-group">
+          <button type="button" class="header-icon-btn theme-toggle-btn" title="Toggle Theme">
+            <span class="material-icons theme-toggle-icon">light_mode</span>
+          </button>
+
+          <a href="/auth/profile" class="header-icon-btn" title="Profile">
+            <span class="material-icons">account_circle</span>
+          </a>
+
+          <% if (typeof userRole !== 'undefined' && userRole === 'admin') { %>
+            <a href="/admin/dashboard" class="header-icon-btn" title="Admin Dashboard">
+              <span class="material-icons">dashboard</span>
+            </a>
+          <% } %>
+
+          <form action="/auth/logout" method="POST" class="form-inline">
+            <button type="submit" class="header-icon-btn" title="Logout">
+              <span class="material-icons">logout</span>
+            </button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+  </div>
 </header>

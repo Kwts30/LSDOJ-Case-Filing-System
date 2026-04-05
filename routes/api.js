@@ -40,18 +40,18 @@ router.post('/generate', [
     try {
       const db = getDatabase();
       const documentRecord = {
-        documentType: formType,
-        issuerName: req.body.issuer_name || req.body.issuer_signature || 'Unknown',
-        clientName: req.session?.username || 'Unknown',
-        userId: new ObjectId(req.session?.userId),
-        formData: req.body,
-        createdAt: new Date(),
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('user-agent'),
-        fileSize: 0
+        doc_type: formType,
+        issuer_name: req.body.issuer_name || req.body.issuer_signature || 'Unknown',
+        client_name: req.session?.username || 'Unknown',
+        user_id: new ObjectId(req.session?.userId),
+        form_data: req.body,
+        created_at: new Date(),
+        ip_address: req.ip || req.connection.remoteAddress,
+        user_agent: req.get('user-agent'),
+        file_size: 0
       };
 
-      await db.collection('generated_documents').insertOne(documentRecord);
+      await db.collection('documents').insertOne(documentRecord);
 
       // Log activity
       await logActivity(

@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     const db = getDatabase();
     const users = await db.collection('users')
       .find()
-      .sort({ createdAt: -1 })
+      .sort({ created_at: -1 })
       .toArray();
 
     res.render('admin/users', {
@@ -22,6 +22,19 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Users list error:', error);
     res.status(500).render('error', { message: 'Failed to load users' });
+  }
+});
+
+// GET /admin/users/add - Render add user page
+router.get('/add', async (req, res) => {
+  try {
+    res.render('admin/user-add', {
+      title: 'Add User',
+      user: req.session
+    });
+  } catch (error) {
+    console.error('Add user page error:', error);
+    res.status(500).render('error', { message: 'Failed to load add user page' });
   }
 });
 
@@ -52,15 +65,19 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const db = getDatabase();
-    const { firstName, lastName, email, role, isActive } = req.body;
+    const { first_name, last_name, firstName, lastName, email, role, is_active, isActive } = req.body;
+
+    const normalizedFirstName = first_name !== undefined ? first_name : firstName;
+    const normalizedLastName = last_name !== undefined ? last_name : lastName;
+    const normalizedIsActive = is_active !== undefined ? is_active : isActive;
 
     const updateData = {
-      firstName,
-      lastName,
+      first_name: normalizedFirstName || '',
+      last_name: normalizedLastName || '',
       email,
       role,
-      isActive: isActive === 'true' || isActive === true,
-      updatedAt: new Date()
+      is_active: normalizedIsActive === 'true' || normalizedIsActive === true,
+      updated_at: new Date()
     };
 
     const result = await db.collection('users').updateOne(
@@ -86,7 +103,10 @@ router.put('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const db = getDatabase();
-    const { username, email, password, firstName, lastName, role } = req.body;
+    const { username, email, password, first_name, last_name, firstName, lastName, role } = req.body;
+
+    const normalizedFirstName = first_name !== undefined ? first_name : firstName;
+    const normalizedLastName = last_name !== undefined ? last_name : lastName;
 
     // Validate required fields
     if (!username || !email || !password) {
@@ -112,21 +132,21 @@ router.post('/', async (req, res) => {
     }
 
     // Hash password
-    const passwordHash = await hashPassword(password);
+    const password_hash = await hashPassword(password);
 
     // Create user
     const newUser = {
       username: username.toLowerCase(),
       email: email.toLowerCase(),
-      passwordHash,
+      password_hash,
       role: role || 'user',
-      firstName: firstName || '',
-      lastName: lastName || '',
-      isActive: true,
-      lastLogin: null,
-      loginAttempts: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      first_name: normalizedFirstName || '',
+      last_name: normalizedLastName || '',
+      is_active: true,
+      last_login: null,
+      login_attempts: 0,
+      created_at: new Date(),
+      updated_at: new Date()
     };
 
     const result = await db.collection('users').insertOne(newUser);
@@ -137,7 +157,7 @@ router.post('/', async (req, res) => {
     res.json({
       success: true,
       message: 'User created successfully',
-      userId: result.insertedId
+      user_id: result.insertedId
     });
   } catch (error) {
     console.error('User creation error:', error);
@@ -152,7 +172,7 @@ router.delete('/:id', async (req, res) => {
 
     const result = await db.collection('users').updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { isActive: false, updatedAt: new Date() } }
+      { $set: { is_active: false, updated_at: new Date() } }
     );
 
     if (result.matchedCount === 0) {

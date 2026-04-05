@@ -1,0 +1,21 @@
+<!-- Reusable Form Group Component (Collapsible Section) -->
+<!-- Usage: <%- include('partials/components/form-group', { title, icon, id, fields }) %> -->
+
+<div class="form-group">
+    <div class="form-group-header" data-toggle="<%= locals.id %>">
+        <h3>
+            <span class="material-icons"><%= locals.icon %></span>
+            <%= locals.title %>
+        </h3>
+        <i class="material-icons toggle-icon">expand_more</i>
+    </div>
+    <div class="form-group-content open" id="<%= locals.id %>">
+        <div class="form-grid">
+            <% if (locals.fields && Array.isArray(locals.fields)) { %>
+                <% locals.fields.forEach(field => { %>
+                    <%- include('./form-field', field) %>
+                <% }); %>
+            <% } %>
+        </div>
+    </div>
+</div>

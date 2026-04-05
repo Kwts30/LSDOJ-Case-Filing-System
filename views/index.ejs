@@ -4,47 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %> - Department of Justice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/global.css">
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/js/theme.js"></script>
 </head>
-<body>
+<body class="<%= (typeof currentPage !== 'undefined' && currentPage === 'create-document') ? 'page-create-document' : '' %>">
     <%- include('partials/header') %>
 
     <!-- Main Layout -->
-    <div class="app-container">
+    <div class="layout-body">
         <%- include('partials/sidebar') %>
-        <%- include('partials/overlay') %>
 
         <!-- Main Content -->
-        <main class="main-content">
-            <div class="content-wrapper">
-                <!-- Form Panel -->
+        <main class="layout-main">
+          <div class="container">
+            <!-- Main Content Grid -->
+            <div class="content-grid-2">
+              <!-- Form Section -->
+              <div>
                 <div class="form-panel">
-                    <%- include('partials/forms/birth') %>
-                    <%- include('partials/forms/marriage') %>
-                    <%- include('partials/forms/business') %>
-                    <%- include('partials/forms/origland') %>
-                    <%- include('partials/forms/transferland') %>
+                  <%- include('partials/forms/birth') %>
+                  <%- include('partials/forms/marriage') %>
+                  <%- include('partials/forms/business') %>
+                  <%- include('partials/forms/origland') %>
+                  <%- include('partials/forms/transferland') %>
                 </div>
+              </div>
 
-                <!-- Preview Panel -->
-                <div class="preview-panel">
-                    <div class="preview-header">
-                        <h2><i class="fas fa-eye"></i> Live Preview</h2>
-                    </div>
-                    <div class="preview-wrapper">
-                        <div class="preview-container" id="preview-container">
-                            <canvas id="preview-canvas"></canvas>
-                        </div>
-                    </div>
+              <!-- Preview Section -->
+              <div>
+                <div class="section-heading">
+                  <span class="material-icons">preview</span>
+                  <h2>Live Preview</h2>
                 </div>
+                <div class="card preview-sticky">
+                  <div class="preview-placeholder">
+                    <div class="preview-placeholder-inner">
+                      <span class="material-icons">image_not_supported</span>
+                      <p>Document preview will appear here</p>
+                    </div>
+                  </div>
+                  <div id="preview-container" hidden>
+                    <canvas id="preview-canvas"></canvas>
+                  </div>
+                </div>
+              </div>
             </div>
+
+          </div>
         </main>
     </div>
 
+    <%- include('partials/overlay') %>
     <%- include('partials/footer') %>
     <%- include('partials/modals') %>
 
+    <!-- Modular JavaScript -->
+    <script src="/js/form-utils.js"></script>
+    <script src="/js/document-handlers.js"></script>
     <script src="/js/app.js"></script>
 </body>
 </html>

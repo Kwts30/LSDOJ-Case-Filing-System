@@ -9,9 +9,9 @@ const helmetConfig = helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", 'cdnjs.cloudflare.com'],
-      styleSrc: ["'self'", "'unsafe-inline'", 'cdnjs.cloudflare.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'cdnjs.cloudflare.com', 'fonts.googleapis.com'],
       imgSrc: ["'self'", 'data:', 'blob:'],
-      fontSrc: ["'self'", 'cdnjs.cloudflare.com', 'data:'],
+      fontSrc: ["'self'", 'cdnjs.cloudflare.com', 'fonts.gstatic.com', 'data:'],
       connectSrc: ["'self'"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"]

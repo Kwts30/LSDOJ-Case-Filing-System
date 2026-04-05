@@ -1,35 +1,95 @@
-<!-- Sidebar partial -->
+<!-- Navigation Sidebar -->
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <img src="/assets/doj.png" class="sidebar-logo" alt="DOJ Seal">
-        <span class="sidebar-title">DOCUMENTS</span>
-        <button class="sidebar-close" id="sidebar-close">
-            <i class="fas fa-times"></i>
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <% if (typeof userRole !== 'undefined' && userRole === 'admin') { %>
+      <!-- Admin Menu -->
+      <div class="sidebar-group">
+        <p class="sidebar-section-label">Administration</p>
+        <a href="/admin/dashboard"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'admin-dashboard') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/admin/documents"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'admin-documents') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">description</span>
+          <span>All Documents</span>
+        </a>
+        <a href="/admin/users"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'admin-users') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">group</span>
+          <span>Users</span>
+        </a>
+        <a href="/admin/activity-logs"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'admin-logs') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">history</span>
+          <span>Audit Logs</span>
+        </a>
+        <a href="/admin/analytics"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'admin-analytics') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">bar_chart</span>
+          <span>Analytics</span>
+        </a>
+        <a href="/admin/reports"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'admin-reports') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">summarize</span>
+          <span>Reports</span>
+        </a>
+      </div>
+    <% } else { %>
+      <!-- User Menu -->
+      <div class="sidebar-group">
+        <p class="sidebar-section-label">My Workspace</p>
+        <a href="/dashboard"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'dashboard') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">dashboard</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="/create-document"
+           class="sidebar-link<%= (typeof currentPage !== 'undefined' && currentPage === 'create-document') ? ' sidebar-link--active' : '' %>">
+          <span class="material-icons">add_circle</span>
+          <span>Create Document</span>
+        </a>
+      </div>
+    <% } %>
+
+    <!-- Document Type Sub-Nav (only on create-document page) -->
+    <% if (typeof currentPage !== 'undefined' && currentPage === 'create-document') { %>
+      <div class="sidebar-group">
+        <p class="sidebar-section-label">Document Type</p>
+        <button class="sidebar-link nav-item" data-section="birth">
+          <span class="material-icons">article</span>
+          <span>Birth Certificate</span>
         </button>
+        <button class="sidebar-link nav-item" data-section="marriage">
+          <span class="material-icons">favorite</span>
+          <span>Marriage Certificate</span>
+        </button>
+        <button class="sidebar-link nav-item" data-section="business">
+          <span class="material-icons">business</span>
+          <span>Business Permit</span>
+        </button>
+        <button class="sidebar-link nav-item" data-section="origland">
+          <span class="material-icons">real_estate_agent</span>
+          <span>Land Title (Original)</span>
+        </button>
+        <button class="sidebar-link nav-item" data-section="transferland">
+          <span class="material-icons">swap_horiz</span>
+          <span>Land Title (Transfer)</span>
+        </button>
+      </div>
+    <% } %>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-info">
+      <p>&copy; 2026 DOJ Los Santos</p>
+      <p>v1.0</p>
     </div>
-    <nav class="sidebar-nav">
-        <button class="nav-item active" data-section="birth">
-            <i class="fas fa-baby"></i>
-            <span>Birth Certificate</span>
-        </button>
-        <button class="nav-item" data-section="marriage">
-            <i class="fas fa-ring"></i>
-            <span>Marriage Certificate</span>
-        </button>
-        <button class="nav-item" data-section="business">
-            <i class="fas fa-briefcase"></i>
-            <span>Business Permit</span>
-        </button>
-        <button class="nav-item" data-section="origland">
-            <i class="fas fa-file-contract"></i>
-            <span>Original Land Title</span>
-        </button>
-        <button class="nav-item" data-section="transferland">
-            <i class="fas fa-exchange-alt"></i>
-            <span>Transfer Land Title</span>
-        </button>
-    </nav>
-    <div class="sidebar-footer">
-        <p>&copy; 2025 DOJ Los Santos</p>
-    </div>
+    <button type="button" class="sidebar-toggle-btn" title="Collapse/Expand">
+      <span class="material-icons sidebar-toggle-icon">chevron_left</span>
+    </button>
+  </div>
 </aside>

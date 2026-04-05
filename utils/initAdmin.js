@@ -8,32 +8,34 @@ async function initializeAdmin() {
     const db = getDatabase();
     const usersCollection = db.collection('users');
 
-    // Check if any users exist
-    const userCount = await usersCollection.countDocuments();
+    const adminUsername = (process.env.ADMIN_USERNAME || 'kdelosreyes').toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || '12345678';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@dojsystem.local';
 
-    if (userCount === 0) {
-      // Hash the admin password
+    // Ensure configured admin account always exists
+    const existingAdmin = await usersCollection.findOne({ username: adminUsername });
+
+    if (!existingAdmin) {
       const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash('12345678', salt);
+      const password_hash = await bcrypt.hash(adminPassword, salt);
 
-      // Create admin account
       const adminAccount = {
-        username: 'kdelosreyes',
-        email: 'admin@dojsystem.local',
-        passwordHash,
+        username: adminUsername,
+        email: adminEmail,
+        password_hash,
         role: 'admin',
-        firstName: 'Admin',
-        lastName: 'Account',
+        first_name: 'Admin',
+        last_name: 'Account',
         department: 'Justice',
-        isActive: true,
-        lastLogin: null,
-        loginAttempts: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        is_active: true,
+        last_login: null,
+        login_attempts: 0,
+        created_at: new Date(),
+        updated_at: new Date()
       };
 
       await usersCollection.insertOne(adminAccount);
-      console.log('✓ Admin account initialized (kdelosreyes / 12345678)');
+      console.log(`✓ Admin account initialized (${adminUsername} / ${adminPassword})`);
     }
   } catch (error) {
     console.error('Failed to initialize admin account:', error);

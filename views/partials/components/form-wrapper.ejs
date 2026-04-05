@@ -1,0 +1,30 @@
+<!-- Form Wrapper Component - Base layout for all document forms -->
+<!-- Usage: <%- include('partials/components/form-wrapper', { documentType, icon, title, sections, formId }) %> -->
+
+<section class="form-section active" id="<%= locals.documentType %>-section">
+    <div class="section-header">
+        <h2>
+            <span class="material-icons"><%= locals.icon %></span>
+            <%= locals.title %>
+        </h2>
+        <button class="collapse-all-btn" data-target="<%= locals.documentType %>">
+            <span class="material-icons">unfold_less</span>
+            Collapse All
+        </button>
+    </div>
+    
+    <form id="<%= locals.formId %>" class="document-form" data-form-type="<%= locals.documentType %>">
+        <% if (locals.sections && Array.isArray(locals.sections)) { %>
+            <% locals.sections.forEach(section => { %>
+                <%- include('./form-group', section) %>
+            <% }); %>
+        <% } %>
+        
+        <div style="margin-top: var(--space-lg); display: flex; gap: var(--space-md);">
+            <button type="submit" class="submit-btn">
+                <span class="material-icons">check_circle</span>
+                Generate <%= locals.title %>
+            </button>
+        </div>
+    </form>
+</section>

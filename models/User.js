@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 
 let db = null;
 
+// USERS Model - Maps to ERD users collection
 const User = {
   setDB(database) {
     db = database;
@@ -11,7 +12,7 @@ const User = {
   async create(userData) {
     if (!db) throw new Error('Database not connected');
 
-    const { username, email, password, firstName, lastName, department, role = 'user' } = userData;
+    const { username, email, password, first_name, last_name, department, role = 'user' } = userData;
 
     // Validate required fields
     if (!username || !email || !password) {
@@ -28,26 +29,26 @@ const User = {
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, 10);
 
     const newUser = {
       username: username.toLowerCase(),
       email: email.toLowerCase(),
-      passwordHash,
+      password_hash,
       role,
-      firstName: firstName || '',
-      lastName: lastName || '',
+      first_name: first_name || '',
+      last_name: last_name || '',
       department: department || '',
-      isActive: true,
-      lastLogin: null,
-      loginAttempts: 0,
-      jwtTokens: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
+      is_active: true,
+      last_login: null,
+      login_attempts: 0,
+      jwt_tokens: [],
+      created_at: new Date(),
+      updated_at: new Date()
     };
 
     const result = await db.collection('users').insertOne(newUser);
-    return { _id: result.insertedId, ...newUser, passwordHash: undefined };
+    return { _id: result.insertedId, ...newUser, password_hash: undefined };
   },
 
   async findByUsername(username) {
@@ -62,11 +63,11 @@ const User = {
 
   async findAll() {
     if (!db) throw new Error('Database not connected');
-    return await db.collection('users').find({ isActive: true }).toArray();
+    return await db.collection('users').find({ is_active: true }).toArray();
   },
 
-  async verifyPassword(inputPassword, passwordHash) {
-    return await bcrypt.compare(inputPassword, passwordHash);
+  async verifyPassword(inputPassword, password_hash) {
+    return await bcrypt.compare(inputPassword, password_hash);
   },
 
   async updateLastLogin(userId) {
@@ -74,8 +75,8 @@ const User = {
     await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
       {
-        $set: { lastLogin: new Date(), loginAttempts: 0 },
-        $currentDate: { updatedAt: true }
+        $set: { last_login: new Date(), login_attempts: 0 },
+        $currentDate: { updated_at: true }
       }
     );
   },
@@ -83,7 +84,7 @@ const User = {
   async updateUser(userId, updateData) {
     if (!db) throw new Error('Database not connected');
 
-    const allowedFields = ['firstName', 'lastName', 'department', 'email'];
+    const allowedFields = ['first_name', 'last_name', 'department', 'email'];
     const updates = {};
 
     allowedFields.forEach(field => {
@@ -96,7 +97,7 @@ const User = {
       throw new Error('No valid fields to update');
     }
 
-    updates.updatedAt = new Date();
+    updates.updated_at = new Date();
 
     const result = await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
@@ -111,21 +112,21 @@ const User = {
     await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
       {
-        $set: { isActive: false },
-        $currentDate: { updatedAt: true }
+        $set: { is_active: false },
+        $currentDate: { updated_at: true }
       }
     );
   },
 
   async changePassword(userId, newPassword) {
     if (!db) throw new Error('Database not connected');
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const password_hash = await bcrypt.hash(newPassword, 10);
 
     await db.collection('users').updateOne(
       { _id: new ObjectId(userId) },
       {
-        $set: { passwordHash },
-        $currentDate: { updatedAt: true }
+        $set: { password_hash },
+        $currentDate: { updated_at: true }
       }
     );
   }

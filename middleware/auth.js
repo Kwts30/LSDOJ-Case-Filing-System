@@ -78,15 +78,15 @@ function requireRole(role) {
 async function logActivity(userId, action, details = '') {
   try {
     const db = getDatabase();
-    const activityCollection = db.collection('activity_logs');
+    const auditCollection = db.collection('audit_logs');
 
-    await activityCollection.insertOne({
-      userId,
+    await auditCollection.insertOne({
+      user_id: userId,
       action,
       details,
       result: 'success',
-      ipAddress: '',
-      userAgent: '',
+      ip_address: '',
+      user_agent: '',
       timestamp: new Date()
     });
   } catch (error) {

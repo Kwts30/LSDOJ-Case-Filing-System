@@ -2,6 +2,7 @@ const { ObjectId } = require('mongodb');
 
 let db = null;
 
+// DOCUMENTS Model - Maps to ERD documents collection
 const Document = {
   setDB(database) {
     db = database;
@@ -11,53 +12,53 @@ const Document = {
     if (!db) throw new Error('Database not connected');
 
     const {
-      documentType,
-      issuerName,
-      clientName,
-      userId,
-      formData,
-      ipAddress,
-      userAgent
+      doc_type,
+      issuer_name,
+      client_name,
+      user_id,
+      form_data,
+      ip_address,
+      user_agent
     } = docData;
 
     const newDoc = {
-      documentType,
-      issuerName,
-      clientName,
-      userId: new ObjectId(userId),
-      formData,
-      fileSize: 0, // Will be updated after generation
-      ipAddress,
-      userAgent,
-      downloadedAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      doc_type,
+      issuer_name,
+      client_name,
+      user_id: new ObjectId(user_id),
+      form_data,
+      file_size: 0,
+      ip_address,
+      user_agent,
+      downloaded_at: null,
+      created_at: new Date(),
+      updated_at: new Date()
     };
 
-    const result = await db.collection('generated_documents').insertOne(newDoc);
+    const result = await db.collection('documents').insertOne(newDoc);
     return { _id: result.insertedId, ...newDoc };
   },
 
   async findAll(filter = {}) {
     if (!db) throw new Error('Database not connected');
-    return await db.collection('generated_documents')
+    return await db.collection('documents')
       .find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ created_at: -1 })
       .toArray();
   },
 
   async findById(docId) {
     if (!db) throw new Error('Database not connected');
-    return await db.collection('generated_documents').findOne({
+    return await db.collection('documents').findOne({
       _id: new ObjectId(docId)
     });
   },
 
-  async findByUserId(userId) {
+  async findByUserId(user_id) {
     if (!db) throw new Error('Database not connected');
-    return await db.collection('generated_documents')
-      .find({ userId: new ObjectId(userId) })
-      .sort({ createdAt: -1 })
+    return await db.collection('documents')
+      .find({ user_id: new ObjectId(user_id) })
+      .sort({ created_at: -1 })
       .toArray();
   },
 
@@ -67,7 +68,7 @@ const Document = {
     const pipeline = [
       {
         $group: {
-          _id: '$documentType',
+          _id: '$doc_type',
           count: { $sum: 1 }
         }
       },
@@ -78,10 +79,10 @@ const Document = {
       const matchStage = {};
       if (startDate) matchStage.$gte = new Date(startDate);
       if (endDate) matchStage.$lte = new Date(endDate);
-      pipeline.unshift({ $match: { createdAt: matchStage } });
+      pipeline.unshift({ $match: { created_at: matchStage } });
     }
 
-    return await db.collection('generated_documents').aggregate(pipeline).toArray();
+    return await db.collection('documents').aggregate(pipeline).toArray();
   },
 
   async countByUser(startDate = null, endDate = null) {
@@ -91,14 +92,14 @@ const Document = {
       {
         $lookup: {
           from: 'users',
-          localField: 'userId',
+          localField: 'user_id',
           foreignField: '_id',
           as: 'user'
         }
       },
       {
         $group: {
-          _id: '$userId',
+          _id: '$user_id',
           username: { $first: { $arrayElemAt: ['$user.username', 0] } },
           count: { $sum: 1 }
         }
@@ -110,19 +111,19 @@ const Document = {
       const matchStage = {};
       if (startDate) matchStage.$gte = new Date(startDate);
       if (endDate) matchStage.$lte = new Date(endDate);
-      pipeline.unshift({ $match: { createdAt: matchStage } });
+      pipeline.unshift({ $match: { created_at: matchStage } });
     }
 
-    return await db.collection('generated_documents').aggregate(pipeline).toArray();
+    return await db.collection('documents').aggregate(pipeline).toArray();
   },
 
   async countByDateRange(startDate, endDate) {
     if (!db) throw new Error('Database not connected');
 
-    return await db.collection('generated_documents').aggregate([
+    return await db.collection('documents').aggregate([
       {
         $match: {
-          createdAt: {
+          created_at: {
             $gte: new Date(startDate),
             $lte: new Date(endDate)
           }
@@ -131,7 +132,7 @@ const Document = {
       {
         $group: {
           _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+            $dateToString: { format: '%Y-%m-%d', date: '$created_at' }
           },
           count: { $sum: 1 }
         }
@@ -142,16 +143,16 @@ const Document = {
 
   async getTotalCount() {
     if (!db) throw new Error('Database not connected');
-    return await db.collection('generated_documents').countDocuments();
+    return await db.collection('documents').countDocuments();
   },
 
   async markAsDownloaded(docId) {
     if (!db) throw new Error('Database not connected');
-    await db.collection('generated_documents').updateOne(
+    await db.collection('documents').updateOne(
       { _id: new ObjectId(docId) },
       {
-        $set: { downloadedAt: new Date() },
-        $currentDate: { updatedAt: true }
+        $set: { downloaded_at: new Date() },
+        $currentDate: { updated_at: true }
       }
     );
   }

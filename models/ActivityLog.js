@@ -2,7 +2,8 @@ const { ObjectId } = require('mongodb');
 
 let db = null;
 
-const ActivityLog = {
+// AUDIT_LOGS Model - Maps to ERD audit_logs collection
+const AuditLog = {
   setDB(database) {
     db = database;
   },
@@ -11,44 +12,44 @@ const ActivityLog = {
     if (!db) throw new Error('Database not connected');
 
     const {
-      userId,
+      user_id,
       action,
-      resourceId = null,
+      document_id = null,
       details = '',
       result = 'success',
-      ipAddress = '',
-      userAgent = ''
+      ip_address = '',
+      user_agent = ''
     } = logData;
 
     const newLog = {
-      userId: new ObjectId(userId),
+      user_id: new ObjectId(user_id),
       action,
-      resourceId: resourceId ? new ObjectId(resourceId) : null,
+      document_id: document_id ? new ObjectId(document_id) : null,
       details,
       result,
-      ipAddress,
-      userAgent,
+      ip_address,
+      user_agent,
       timestamp: new Date()
     };
 
-    await db.collection('activity_logs').insertOne(newLog);
+    await db.collection('audit_logs').insertOne(newLog);
     return newLog;
   },
 
   async findAll(filter = {}) {
     if (!db) throw new Error('Database not connected');
 
-    return await db.collection('activity_logs')
+    return await db.collection('audit_logs')
       .find(filter)
       .sort({ timestamp: -1 })
       .toArray();
   },
 
-  async findByUser(userId) {
+  async findByUser(user_id) {
     if (!db) throw new Error('Database not connected');
 
-    return await db.collection('activity_logs')
-      .find({ userId: new ObjectId(userId) })
+    return await db.collection('audit_logs')
+      .find({ user_id: new ObjectId(user_id) })
       .sort({ timestamp: -1 })
       .toArray();
   },
@@ -64,7 +65,7 @@ const ActivityLog = {
       if (endDate) filter.timestamp.$lte = new Date(endDate);
     }
 
-    return await db.collection('activity_logs')
+    return await db.collection('audit_logs')
       .find(filter)
       .sort({ timestamp: -1 })
       .toArray();
@@ -90,7 +91,7 @@ const ActivityLog = {
       pipeline.unshift({ $match: { timestamp: matchStage } });
     }
 
-    return await db.collection('activity_logs').aggregate(pipeline).toArray();
+    return await db.collection('audit_logs').aggregate(pipeline).toArray();
   },
 
   async cleanup(olderThanDays = 90) {
@@ -99,7 +100,7 @@ const ActivityLog = {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
-    const result = await db.collection('activity_logs').deleteMany({
+    const result = await db.collection('audit_logs').deleteMany({
       timestamp: { $lt: cutoffDate }
     });
 
@@ -107,4 +108,4 @@ const ActivityLog = {
   }
 };
 
-module.exports = ActivityLog;
+module.exports = AuditLog;

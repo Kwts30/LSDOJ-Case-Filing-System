@@ -96,7 +96,7 @@ sidebarClose?.addEventListener('click', closeSidebar);
 sidebarOverlay?.addEventListener('click', closeSidebar);
 
 // Close sidebar when clicking a nav item (mobile)
-document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {
+document.querySelectorAll('.nav-item[data-section]').forEach(btn => {
     btn.addEventListener('click', closeSidebar);
 });
 
@@ -207,9 +207,9 @@ applyZoom();
 
 let currentCertificateType = 'birth';
 
-document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {
+document.querySelectorAll('.nav-item[data-section]').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.sidebar-nav .nav-item').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-item[data-section]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const section = btn.getAttribute('data-section');
         
