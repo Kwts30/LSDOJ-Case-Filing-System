@@ -216,29 +216,30 @@ function highlightErrors(form, errorFields) {
 
 /**
  * Initialize all form listeners
+ * NOTE: The submit handler here is for FUTURE backend submission only.
+ * It is guarded by a data-attribute so it does NOT fire when app.js
+ * has already registered a canvas-download handler on the same form.
  */
 function initializeAllForms() {
     initializeFormGroups();
     initializeCollapseButtons();
-    
-    // Attach submit listeners to all forms
-    document.querySelectorAll('form[id$="-form"]').forEach(form => {
+
+    // Only attach backend submit listener to forms that opt-in with
+    // data-backend-submit="true" — prevents conflict with app.js canvas handlers.
+    document.querySelectorAll('form[id$="-form"][data-backend-submit="true"]').forEach(form => {
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const formType = getFormType(this);
             const formData = collectFormData(this);
-            
-            console.log(`Submitting ${formType} form:`, formData);
-            
+
+            console.log(`[form-utils] Submitting ${formType} form to backend:`, formData);
+
             try {
                 const result = await submitForm(formType, formData);
-                console.log('Form submitted successfully:', result);
-                // Show success notification (integrate with your modal system)
-                alert(`${formType} document generated successfully!`);
+                console.log('[form-utils] Form submitted successfully:', result);
             } catch (error) {
-                console.error('Form submission failed:', error);
-                alert(`Error: ${error.message}`);
+                console.error('[form-utils] Form submission failed:', error);
             }
         });
     });

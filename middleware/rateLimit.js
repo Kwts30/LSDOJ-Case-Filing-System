@@ -1,29 +1,11 @@
 // Rate limiting middleware with MongoDB tracking
 // Tracks both IP address and session to limit requests to 50 per hour
 
-const { MongoClient } = require('mongodb');
-let db = null;
-
-async function initializeDb(mongoUri) {
-  if (!db) {
-    const client = new MongoClient(mongoUri);
-    await client.connect();
-    db = client.db('doj-auto-fillup');
-
-    // Create TTL index to auto-delete old records after 1 hour
-    const rateLimitCollection = db.collection('rate_limit');
-    await rateLimitCollection.createIndex('createdAt', { expireAfterSeconds: 3600 });
-    await rateLimitCollection.createIndex({ 'identifier': 1 });
-  }
-  return db;
-}
+const { getDatabase } = require('../utils/db');
 
 async function rateLimitMiddleware(req, res, next) {
   try {
-    if (!db) {
-      return next(); // Skip if DB not initialized
-    }
-
+    const db = getDatabase();
     const rateLimitCollection = db.collection('rate_limit');
     const ip = req.ip || req.connection.remoteAddress;
     const sessionId = req.sessionID || req.cookies?.sessionId || 'anonymous';
@@ -36,7 +18,7 @@ async function rateLimitMiddleware(req, res, next) {
     // Count requests from this IP+Session in the last hour
     const requestCount = await rateLimitCollection.countDocuments({
       identifier,
-      createdAt: { $gte: oneHourAgo }
+      created_at: { $gte: oneHourAgo }
     });
 
     const limit = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '50', 10);
@@ -55,7 +37,7 @@ async function rateLimitMiddleware(req, res, next) {
       identifier,
       ip,
       sessionId,
-      createdAt: now,
+      created_at: now,
       endpoint: req.path,
       method: req.method
     });
@@ -74,4 +56,4 @@ async function rateLimitMiddleware(req, res, next) {
   }
 }
 
-module.exports = { rateLimitMiddleware, initializeDb };
+module.exports = { rateLimitMiddleware };

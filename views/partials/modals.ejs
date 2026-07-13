@@ -20,7 +20,7 @@
 </div>
 
 <!-- Success Modal -->
-<div id="success-modal" class="modal">
+<div id="success-modal" class="modal" style="z-index: 9999;">
     <div class="modal-content">
         <div class="modal-header success">
             <span class="material-icons modal-icon">check_circle</span>
@@ -50,3 +50,43 @@
         </div>
     </div>
 </div>
+
+<!-- Preview Modal (Now Action-Only Modal) -->
+<div id="preview-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px; width: 90%;">
+        <div class="modal-header success" style="position: relative; display: flex; align-items: center; gap: 0.75rem; background: #0f172a; color: white;">
+            <span class="material-icons modal-icon" style="color: #10b981;">check_circle</span>
+            <h3 style="margin: 0;">Document Generated</h3>
+            <button id="close-preview-btn" class="close-modal-btn" style="background:none; border:none; color:#fff; cursor:pointer; font-size:2rem; position:absolute; right:1.5rem; top:50%; transform: translateY(-50%); z-index:10; padding: 0.5rem; line-height: 1;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 2rem; background: var(--color-bg-secondary); text-align: center; color: var(--color-text-primary);">
+            <p style="font-size: 1.1rem; margin-bottom: 1.5rem; font-weight: 500;">
+                Your document has been filled and generated successfully in the background.
+            </p>
+            <p style="font-size: 0.95rem; color: var(--color-text-secondary); margin-bottom: 0.5rem;">
+                Select your preferred format below, then copy or download the generated image.
+            </p>
+        </div>
+        <div class="modal-footer" style="justify-content: space-between; flex-direction: column; gap: 1rem; padding: 1.5rem; border-top: 1px solid var(--color-border);">
+            <div class="export-format-group" style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 0.5rem;">
+                <label for="export-format" class="export-label" style="font-weight: 500; font-size: 0.9rem;">
+                    <span class="material-icons" style="font-size: 1.2rem; vertical-align: middle;">image</span> Export Format
+                </label>
+                <select id="export-format" class="form-control" style="width: auto; display: inline-block; padding: 0.35rem 0.5rem; border-radius: 6px;">
+                    <option value="image/png">PNG (lossless)</option>
+                    <option value="image/jpeg">JPEG (smaller)</option>
+                    <option value="image/webp">WebP (modern)</option>
+                </select>
+            </div>
+            <div class="export-actions" style="display: flex; gap: 0.75rem; width: 100%;">
+                <button id="btn-copy-clipboard" class="btn btn-outline" type="button" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" title="Copy to clipboard">
+                    <span class="material-icons" style="font-size: 1.2rem;">content_copy</span> Copy Image
+                </button>
+                <button id="btn-download-image" class="btn btn-primary" type="button" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" title="Download image">
+                    <span class="material-icons" style="font-size: 1.2rem;">download</span> Download
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+

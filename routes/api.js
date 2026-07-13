@@ -1,91 +1,69 @@
-// API routes - receive form data and generate certificates
+// API routes — system status and reference data
+// LSPD / DOJ Case Filing System
 
 const express = require('express');
-const { body, validationResult } = require('express-validator');
 const router = express.Router();
-const { CERTIFICATES, FIELD_VALIDATIONS } = require('../config/constants');
-const { getDatabase, ObjectId } = require('../utils/db');
-const { logActivity } = require('../middleware/auth');
+const { getDatabase } = require('../utils/db');
+const { DEPARTMENTS, POSITIONS, FILING_STATUSES, CHARGE_CATEGORIES } = require('../config/constants');
 
-// POST /api/generate - validate and accept form data
-router.post('/generate', [
-  body('formType').isIn(['birth', 'marriage', 'business', 'origland', 'transferland']),
-  body('*').trim().escape().isLength({ max: 500 })
-], async (req, res) => {
-  try {
-    // Validate request
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { formType } = req.body;
-    const validation = FIELD_VALIDATIONS[formType];
-
-    if (!validation) {
-      return res.status(400).json({ error: 'Invalid form type' });
-    }
-
-    // Check required fields
-    const missingFields = validation.required.filter(field => !req.body[field]);
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        error: 'Missing required fields',
-        missingFields,
-        message: `Please fill in: ${missingFields.join(', ')}`
-      });
-    }
-
-    // Log document generation
-    try {
-      const db = getDatabase();
-      const documentRecord = {
-        doc_type: formType,
-        issuer_name: req.body.issuer_name || req.body.issuer_signature || 'Unknown',
-        client_name: req.session?.username || 'Unknown',
-        user_id: new ObjectId(req.session?.userId),
-        form_data: req.body,
-        created_at: new Date(),
-        ip_address: req.ip || req.connection.remoteAddress,
-        user_agent: req.get('user-agent'),
-        file_size: 0
-      };
-
-      await db.collection('documents').insertOne(documentRecord);
-
-      // Log activity
-      await logActivity(
-        new ObjectId(req.session?.userId),
-        'generate_document',
-        `Generated ${formType} certificate`
-      );
-    } catch (logError) {
-      console.error('Document logging error:', logError);
-      // Don't fail the request if logging fails
-    }
-
-    // All validations passed - return success
-    // Client-side canvas generation handles the actual rendering
-    res.json({
-      success: true,
-      message: 'Form validated successfully',
-      formType,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Generate error:', error);
-    res.status(500).json({ error: 'An error occurred during validation' });
-  }
-});
-
-// GET /api/health - status check
+// GET /api/status — System status
 router.get('/status', (req, res) => {
   res.json({
     status: 'ok',
-    version: '2.0.0',
-    timestamp: new Date().toISOString(),
-    availableFormats: Object.keys(CERTIFICATES)
+    version: '3.0.0',
+    system: 'Department of Justice Case Filing System',
+    timestamp: new Date().toISOString()
   });
 });
+
+// GET /api/charges — List all charge codes (for dynamic form population)
+router.get('/charges', async (req, res) => {
+  try {
+    const db = getDatabase();
+    const category = req.query.category || null;
+    const filter = category ? { category } : {};
+    const charges = await db.collection('charges').find(filter).sort({ code: 1 }).toArray();
+    res.json({ charges });
+  } catch (error) {
+    console.error('Charges API error:', error);
+    res.status(500).json({ error: 'Failed to load charges' });
+  }
+});
+
+// GET /api/departments — List departments
+router.get('/departments', async (req, res) => {
+  try {
+    const db = getDatabase();
+    const departments = await db.collection('departments').find().sort({ code: 1 }).toArray();
+    res.json({ departments });
+  } catch (error) {
+    res.json({ departments: DEPARTMENTS.map(d => ({ code: d })) });
+  }
+});
+
+// GET /api/positions — List positions for a department
+router.get('/positions/:department', (req, res) => {
+  const dept = req.params.department.toUpperCase();
+  const positions = POSITIONS[dept] || [];
+  res.json({ department: dept, positions });
+});
+
+// GET /api/filing-stats — Filing statistics (for dashboard widgets)
+router.get('/filing-stats', async (req, res) => {
+  try {
+    const db = getDatabase();
+    const stats = await db.collection('filings').aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]).toArray();
+    res.json({ stats });
+  } catch (error) {
+    console.error('Filing stats API error:', error);
+    res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
+// Mount documents API
+router.use('/documents', require('./api/documents'));
 
 module.exports = router;

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Request an account on the Department of Justice Case Filing System">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/style.css?v=3">
+  <script src="/js/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-card auth-card--wide">
+      <div class="auth-header">
+        <img src="/Assets/doj.png" alt="DA Seal" class="auth-logo">
+        <h1>Request Account</h1>
+        <p class="auth-subtitle">Your account will require administrator verification before access is granted</p>
+      </div>
+
+      <% if (error) { %>
+        <div class="alert alert-error">
+          <span class="material-icons">error</span>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/auth/signup" class="auth-form" id="signup-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">person</span>
+              <input type="text" id="username" name="username" placeholder="e.g. JDOE or LSPD-042" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">person</span>
+              <input type="text" id="name" name="name" placeholder="Your full name" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="department">Department</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">business</span>
+              <select id="department" name="department" required>
+                <option value="">Select department</option>
+                <% departments.forEach(dept => { %>
+                  <option value="<%= dept %>"><%= dept %></option>
+                <% }); %>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="position">Position / Rank</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">military_tech</span>
+              <select id="position" name="position" required>
+                <option value="">Select department first</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" id="badge-row" style="display: none;">
+          <div class="form-group" style="width: 100%;">
+            <label for="badge_number">Badge Number</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">badge</span>
+              <input type="text" id="badge_number" name="badge_number" placeholder="e.g. 1234 or A-42">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">lock</span>
+              <input type="password" id="password" name="password" placeholder="Minimum <%= passwordMinimumLength %> characters" required minlength="<%= passwordMinimumLength %>">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">lock</span>
+              <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required minlength="<%= passwordMinimumLength %>">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="signup-btn">
+          <span class="material-icons">person_add</span>
+          Submit for Verification
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a href="/auth/login" class="auth-link">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dynamic position dropdown based on department selection
+    const positions = <%- JSON.stringify(positions) %>;
+    const deptSelect = document.getElementById('department');
+    const posSelect = document.getElementById('position');
+    const badgeRow = document.getElementById('badge-row');
+    const badgeInput = document.getElementById('badge_number');
+
+    deptSelect.addEventListener('change', () => {
+      const dept = deptSelect.value;
+      
+      // Badge number logic for LSPD
+      if (dept === 'LSPD') {
+        badgeRow.style.display = 'flex';
+        badgeInput.required = true;
+      } else {
+        badgeRow.style.display = 'none';
+        badgeInput.required = false;
+        badgeInput.value = '';
+      }
+
+      posSelect.innerHTML = '';
+
+      if (!dept || !positions[dept]) {
+        posSelect.innerHTML = '<option value="">Select department first</option>';
+        return;
+      }
+
+      posSelect.innerHTML = '<option value="">Select position</option>';
+      positions[dept].forEach(pos => {
+        const opt = document.createElement('option');
+        opt.value = pos;
+        opt.textContent = pos;
+        posSelect.appendChild(opt);
+      });
+    });
+  </script>
+</body>
+</html>

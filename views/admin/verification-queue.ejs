@@ -1,0 +1,110 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Account Verification Queue</h1>
+      <p class="page-subtitle">Review and verify pending account applications</p>
+    </div>
+  </div>
+
+  <% if (pending.length === 0) { %>
+    <div class="empty-state">
+      <span class="material-icons empty-icon">check_circle</span>
+      <h3>No pending accounts</h3>
+      <p>All account applications have been processed.</p>
+    </div>
+  <% } else { %>
+    <div class="table-container">
+      <table class="data-table" id="verification-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Position</th>
+            <th>Applied</th>
+            <th>Age</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% pending.forEach(u => { %>
+            <tr id="account-row-<%= u._id %>">
+              <td><strong><%= u.username %></strong></td>
+              <td><%= u.name %></td>
+              <td><%= u.department %></td>
+              <td><%= u.position %></td>
+              <td><%= u.created_at ? new Date(u.created_at).toLocaleDateString() : '' %></td>
+              <td>
+                <%
+                  const ageMs = Date.now() - (u.created_at ? new Date(u.created_at).getTime() : Date.now());
+                  const ageHours = Math.round(ageMs / (1000 * 60 * 60));
+                %>
+                <span class="<%= ageHours > 48 ? 'text-danger' : '' %>"><%= ageHours %>h</span>
+              </td>
+              <td>
+                <div class="btn-group">
+                  <button class="btn btn-sm btn-success approve-btn" data-id="<%= u._id %>">
+                    <span class="material-icons">check</span>
+                    Approve
+                  </button>
+                  <button class="btn btn-sm btn-danger reject-btn" data-id="<%= u._id %>">
+                    <span class="material-icons">close</span>
+                    Reject
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</main>
+
+<script>
+  document.querySelectorAll('.approve-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Approve this account?')) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/admin/accounts/' + btn.dataset.id + '/approve', { method: 'POST' });
+        const result = await res.json();
+        if (result.success) {
+          const row = document.getElementById('account-row-' + btn.dataset.id);
+          if (row) row.remove();
+        } else {
+          alert(result.error);
+          btn.disabled = false;
+        }
+      } catch { alert('Failed to approve'); btn.disabled = false; }
+    });
+  });
+
+  document.querySelectorAll('.reject-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const reason = prompt('Enter rejection reason:');
+      if (!reason) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/admin/accounts/' + btn.dataset.id + '/reject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rejection_reason: reason })
+        });
+        const result = await res.json();
+        if (result.success) {
+          const row = document.getElementById('account-row-' + btn.dataset.id);
+          if (row) row.remove();
+        } else {
+          alert(result.error);
+          btn.disabled = false;
+        }
+      } catch { alert('Failed to reject'); btn.disabled = false; }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,12 +1,41 @@
-<!-- Header Navigation -->
-<header class="header">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <title><%= typeof title !== 'undefined' ? title : 'Department of Justice Case Filing System' %></title>
+  
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/style.css?v=3">
+  <script src="/js/theme.js"></script>
+  <script src="/js/csrf.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body class="app-layout">
+
+<!-- Header Navigation — LSPD / DA Case Filing System -->
+<%
+  let headerClass = 'header--default';
+  if (typeof department !== 'undefined') {
+    if (department === 'LSPD') headerClass = 'header--lspd';
+    else if (department === 'DA') headerClass = 'header--da';
+    else if (department === 'DOJ') headerClass = 'header--doj';
+  } else if (typeof admin_role !== 'undefined' && admin_role !== 'none') {
+    headerClass = 'header--admin';
+  }
+%>
+<header class="header <%= headerClass %>">
   <div class="header-container">
     <!-- Brand -->
     <div class="header-brand">
-      <img src="/assets/lossantos.webp" class="header-logo" alt="Los Santos">
-      <img src="/assets/doj.png" class="header-logo" alt="Department of Justice">
+      <img src="/Assets/lossantos.webp" class="header-logo" alt="Los Santos">
+      <img src="/Assets/doj.png" class="header-logo" alt="District Attorney">
       <div class="header-brand-text">
-        <h1>Department of Justice</h1>
+        <h1>Department of Justice Case Filing System</h1>
         <p>City of Los Santos | San Andreas</p>
       </div>
     </div>
@@ -15,12 +44,20 @@
     <div class="header-actions">
       <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
         <div class="header-user-info">
-          <div class="username"><%= typeof username !== 'undefined' ? username : 'User' %></div>
+          <div class="username"><%= typeof name !== 'undefined' ? name : 'User' %></div>
           <div class="role">
             <span class="material-icons role-icon">
-              <%= (typeof userRole !== 'undefined' && userRole === 'admin') ? 'shield' : 'person' %>
+              <%= (typeof admin_role !== 'undefined' && (admin_role === 'department_admin' || admin_role === 'super_admin')) ? 'shield' : 'person' %>
             </span>
-            <%= (typeof userRole !== 'undefined' && userRole === 'admin') ? 'Admin' : 'User' %>
+            <% if (typeof username !== 'undefined' && username) { %>
+              <%= username %>
+            <% } %>
+            <% if (typeof department !== 'undefined' && department) { %>
+              | <%= department %>
+            <% } %>
+            <% if (typeof position !== 'undefined' && position) { %>
+              - <%= position %>
+            <% } %>
           </div>
         </div>
 
@@ -33,13 +70,14 @@
             <span class="material-icons">account_circle</span>
           </a>
 
-          <% if (typeof userRole !== 'undefined' && userRole === 'admin') { %>
+          <% if (typeof admin_role !== 'undefined' && (admin_role === 'department_admin' || admin_role === 'super_admin')) { %>
             <a href="/admin/dashboard" class="header-icon-btn" title="Admin Dashboard">
-              <span class="material-icons">dashboard</span>
+              <span class="material-icons">admin_panel_settings</span>
             </a>
           <% } %>
 
           <form action="/auth/logout" method="POST" class="form-inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="header-icon-btn" title="Logout">
               <span class="material-icons">logout</span>
             </button>

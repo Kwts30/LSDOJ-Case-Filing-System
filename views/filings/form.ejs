@@ -1,0 +1,673 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<style>
+  .spin {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .drag-drop-zone {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+    padding: var(--space-xl);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    min-height: 140px;
+    margin-top: 8px;
+  }
+  .drag-drop-zone:hover, .drag-drop-zone.dragover {
+    border-color: var(--color-accent) !important;
+    background: var(--color-bg-tertiary) !important;
+  }
+  .drag-drop-zone .drag-icon {
+    font-size: 3rem;
+    color: var(--color-text-tertiary);
+    transition: color var(--transition-base);
+  }
+  .drag-drop-zone:hover .drag-icon, .drag-drop-zone.dragover .drag-icon {
+    color: var(--color-accent);
+  }
+  .drag-drop-zone .drag-text {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+  .drag-drop-zone .drag-text span {
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+  }
+</style>
+
+<main class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1><%= editFiling ? `Edit Filing ${editFiling.filing_number}` : 'File New Request' %></h1>
+      <p class="page-subtitle"><%= editFiling ? 'Update filing details before resubmission' : 'Create a new filing for DA review' %></p>
+    </div>
+    <a href="/filings" class="btn btn-ghost">
+      <span class="material-icons">arrow_back</span>
+      Back to Filings
+    </a>
+  </div>
+
+  <% if (editFiling && editFiling.revision_note) { %>
+    <div class="alert alert-warning">
+      <span class="material-icons">assignment_return</span>
+      <div>
+        <strong>Revision Requested:</strong>
+        <% if (editFiling.revision_reason && REVISION_REASON_LABELS) { %>
+          <%= REVISION_REASON_LABELS[editFiling.revision_reason] || editFiling.revision_reason %>
+        <% } %>
+        <% if (editFiling.revision_note) { %>
+          <p style="margin-top: 4px;"><%= editFiling.revision_note %></p>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+
+  <form id="filing-form" class="form-layout" enctype="multipart/form-data">
+    <!-- Filing Type Information -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <span class="material-icons">feed</span>
+        <h2>Filing Type Information</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="filing_type">Filing Type <span class="required">*</span></label>
+          <select id="filing_type" name="filing_type" required>
+            <option value="" disabled <%= !editFiling || !editFiling.filing_type ? 'selected' : '' %>>Select a filing type...</option>
+            <% FILING_TYPES.forEach(ft => { %>
+              <option value="<%= ft.value %>" <%= editFiling && editFiling.filing_type === ft.value ? 'selected' : '' %>><%= ft.label %></option>
+            <% }); %>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accused Information -->
+    <div class="form-section" id="accused-section">
+      <div class="form-section-header">
+        <span class="material-icons">person</span>
+        <h2>Accused Information</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="accused_name">Accused Name <span class="required">*</span></label>
+          <input type="text" id="accused_name" name="accused_name"
+            value="<%= editFiling ? editFiling.accused_name : '' %>"
+            placeholder="Full legal name" required>
+        </div>
+        <div class="form-group" id="accused-id-group">
+          <label for="accused_id_number">ID Number</label>
+          <input type="text" id="accused_id_number" name="accused_id_number"
+            value="<%= editFiling ? (editFiling.accused_id_number || '') : '' %>"
+            placeholder="State ID or SSN (if known)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Charges -->
+    <div class="form-section" id="charges-section">
+      <div class="form-section-header">
+        <span class="material-icons">gavel</span>
+        <h2>Charges <span class="required">*</span></h2>
+      </div>
+      <div class="charges-selector" id="charges-selector">
+        <% const selectedCharges = editFiling ? (editFiling.charges || []) : []; %>
+        <% charges.forEach(charge => { %>
+          <label class="charge-chip" id="charge-<%= charge.code %>">
+            <input type="checkbox" name="charges" value="<%= charge.code %>"
+              <%= selectedCharges.includes(charge.code) ? 'checked' : '' %>>
+            <span class="charge-chip-label">
+              <span class="charge-code"><%= charge.code %></span>
+              <span class="charge-name"><%= charge.label %></span>
+              <span class="charge-category category-<%= charge.category %>"><%= charge.category %></span>
+            </span>
+          </label>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Narrative -->
+    <div class="form-section" id="narrative-section">
+      <div class="form-section-header">
+        <span class="material-icons">description</span>
+        <h2 id="narrative-title">Narrative / Affidavit</h2>
+      </div>
+      <div class="form-group">
+        <label for="narrative" id="narrative-label">Narrative <span class="required">*</span></label>
+        <textarea id="narrative" name="narrative" rows="8"
+          placeholder="Describe the events, circumstances, and facts in detail..."
+          required><%= editFiling ? (editFiling.narrative || '') : '' %></textarea>
+      </div>
+    </div>
+
+    <!-- Officer Signature -->
+    <div class="form-section" id="officer-signature-section">
+      <div class="form-section-header">
+        <span class="material-icons">draw</span>
+        <h2>Officer Signature</h2>
+      </div>
+      <div class="form-group" style="background: var(--color-bg-secondary); padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-md);">
+        <label for="officer-signature-file" style="font-weight: var(--font-weight-semibold); display: block; margin-bottom: var(--space-xs);">
+          Officer Signature Image (PNG/JPG) <span class="required">*</span>
+        </label>
+        <% const officerSigAtt = typeof attachments !== 'undefined' && attachments ? attachments.find(a => a.category === 'officer_signature') : null; %>
+        <% if (officerSigAtt) { %>
+          <div id="existing-officer-signature" style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); background: var(--color-bg-primary); padding: var(--space-sm); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+            <span class="material-icons" style="color: var(--color-success);">check_circle</span>
+            <span style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">Signature already uploaded: <strong><%= officerSigAtt.original_name %></strong></span>
+          </div>
+        <% } %>
+        <input type="file" id="officer-signature-file" accept="image/*" class="form-control" style="width: 100%; max-width: 400px;" <%= officerSigAtt ? '' : 'required' %>>
+        <p class="form-help" style="margin-top: var(--space-xs); color: var(--color-text-secondary); font-size: var(--font-size-sm);">Please upload a scanned image or drawing of your handwritten signature. It will be printed on the generated Arrest Warrant.</p>
+      </div>
+    </div>
+
+    <!-- Evidence Attachments -->
+    <div class="form-section" id="attachments-section">
+      <div class="form-section-header">
+        <span class="material-icons">attach_file</span>
+        <h2>Evidence Attachments</h2>
+      </div>
+
+      <% if (editFiling) { %>
+        <div id="attachments-list" style="margin-bottom: var(--space-md);">
+          <% if (typeof attachments !== 'undefined' && attachments && attachments.length > 0) { %>
+            <% const evidenceAtts = attachments.filter(a => a.category !== 'officer_signature' && a.category !== 'da_signature') %>
+            <% if (evidenceAtts.length > 0) { %>
+              <% evidenceAtts.forEach(att => { %>
+                <div class="attachment-item" data-id="<%= att._id %>" style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-xs); background: var(--color-bg-secondary);">
+                  <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                    <span class="material-icons">insert_drive_file</span>
+                    <span class="attachment-name"><%= att.original_name %></span>
+                    <span class="attachment-category" style="font-size: var(--font-size-xs); background: var(--color-accent-light); color: var(--color-primary); padding: 2px 6px; border-radius: var(--radius-sm);"><%= att.category %></span>
+                  </div>
+                  <button type="button" class="btn btn-icon btn-danger-ghost delete-attachment"
+                    data-filing="<%= editFiling.filing_number %>" data-id="<%= att._id %>" title="Remove">
+                    <span class="material-icons">close</span>
+                  </button>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <p class="empty-text">No attachments yet</p>
+            <% } %>
+          <% } else { %>
+            <p class="empty-text">No attachments yet</p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <div class="upload-area" id="upload-area">
+        <label style="font-weight: var(--font-weight-semibold); margin-bottom: var(--space-xs); display: block;">Evidence Exhibits</label>
+        <div id="exhibits-list-container">
+          <div class="exhibit-slot-item" style="display: flex; gap: var(--space-md); align-items: center; margin-bottom: var(--space-sm); background: var(--color-bg-secondary); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <div style="flex: 1;">
+              <label style="font-size: var(--font-size-xs); color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Exhibit File</label>
+              <input type="file" name="files" class="exhibit-file-input form-control" accept="image/*,.pdf,video/*,.txt" style="width: 100%;">
+            </div>
+            <div style="width: 200px;">
+              <label style="font-size: var(--font-size-xs); color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Category</label>
+              <select class="exhibit-category-select form-control" style="width: 100%;">
+                <% ATTACHMENT_TYPES.forEach(t => { %>
+                  <option value="<%= t.value %>" <%= t.value === 'evidence_photo' ? 'selected' : '' %>><%= t.label %></option>
+                <% }); %>
+              </select>
+            </div>
+            <button type="button" class="btn btn-icon btn-danger-ghost remove-exhibit-slot" style="margin-top: 20px; display: none;" title="Remove Slot">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost" id="add-exhibit-slot-btn" style="margin-top: var(--space-sm); display: flex; align-items: center; gap: 4px;">
+          <span class="material-icons">add</span>
+          Add Another Exhibit
+        </button>
+
+        <% if (editFiling) { %>
+          <button type="button" class="btn btn-secondary" id="upload-btn" style="margin-top: var(--space-md);">
+            <span class="material-icons">upload</span>
+            Upload Attachments Immediately
+          </button>
+        <% } else { %>
+          <p class="form-help" style="margin-top: 15px; color: var(--color-text-secondary); font-size: var(--font-size-sm);">Files selected in the exhibits above will be uploaded automatically when you Save as Draft.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" id="save-draft-btn">
+        <span class="material-icons">save</span>
+        Save as Draft
+      </button>
+      <button type="button" class="btn btn-primary" id="submit-filing-btn">
+        <span class="material-icons">send</span>
+        Submit to DA
+      </button>
+    </div>
+  </form>
+</main>
+
+<!-- E-Signature Modal -->
+<div class="modal-overlay" id="esign-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>E-Signature Attestation</h2>
+      <button type="button" class="btn btn-icon" id="esign-close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>By submitting this filing, you attest that all information provided is accurate and complete to the best of your knowledge.</p>
+      <div class="form-group">
+        <label for="esign-password">Re-enter your password to confirm</label>
+        <input type="password" id="esign-password" placeholder="Your password" required>
+      </div>
+      <label class="checkbox-label">
+        <input type="checkbox" id="esign-attest">
+        <span>I attest that the information in this filing is true, accurate, and complete.</span>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="esign-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="esign-confirm" disabled>
+        <span class="material-icons">check</span>
+        Confirm and Submit
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const isEdit = <%= editFiling ? 'true' : 'false' %>;
+  const filingNumber = '<%= editFiling ? editFiling.filing_number : '' %>';
+  const hasOfficerSignature = <%= typeof attachments !== 'undefined' && attachments && attachments.some(a => a.category === 'officer_signature') ? 'true' : 'false' %>;
+  const filingSchemas = <%- FILING_SCHEMAS || '{}' %>;
+
+  const filingTypeSelect = document.getElementById('filing_type');
+  const accusedIdGroup = document.getElementById('accused-id-group');
+  const chargesSection = document.getElementById('charges-section');
+  const narrativeTitle = document.getElementById('narrative-title');
+  const narrativeLabel = document.getElementById('narrative-label');
+  const narrativeTextarea = document.getElementById('narrative');
+  const attachmentsSection = document.getElementById('attachments-section');
+  const officerSignatureSection = document.getElementById('officer-signature-section');
+
+  function setSectionVisibility(section, visible) {
+    if (!section) return;
+    section.style.display = visible ? 'block' : 'none';
+    section.querySelectorAll('input, select, textarea').forEach(field => { field.disabled = !visible; });
+  }
+
+  // ── Dynamic Exhibit Slots JS ──
+  const exhibitsListContainer = document.getElementById('exhibits-list-container');
+  const addExhibitBtn = document.getElementById('add-exhibit-slot-btn');
+
+  if (addExhibitBtn && exhibitsListContainer) {
+    addExhibitBtn.addEventListener('click', () => {
+      const item = document.createElement('div');
+      item.className = 'exhibit-slot-item';
+      item.style.display = 'flex';
+      item.style.gap = 'var(--space-md)';
+      item.style.alignItems = 'center';
+      item.style.marginBottom = 'var(--space-sm)';
+      item.style.background = 'var(--color-bg-secondary)';
+      item.style.padding = 'var(--space-sm)';
+      item.style.border = '1px solid var(--color-border)';
+      item.style.borderRadius = 'var(--radius-md)';
+      
+      let optionsHtml = '';
+      const attachmentTypes = [
+        { value: 'evidence_photo', label: 'Evidence Photo' },
+        { value: 'witness_statement', label: 'Witness Statement' },
+        { value: 'body_cam', label: 'Body Camera Footage' },
+        { value: 'dash_cam', label: 'Dash Camera Footage' },
+        { value: 'surveillance', label: 'Surveillance Footage' },
+        { value: 'forensic_report', label: 'Forensic Report' },
+        { value: 'medical_report', label: 'Medical Report' },
+        { value: 'other', label: 'Other' }
+      ];
+      attachmentTypes.forEach(t => {
+        optionsHtml += `<option value="${t.value}" ${t.value === 'evidence_photo' ? 'selected' : ''}>${t.label}</option>`;
+      });
+
+      item.innerHTML = `
+        <div style="flex: 1;">
+          <label style="font-size: var(--font-size-xs); color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Exhibit File</label>
+          <input type="file" name="files" class="exhibit-file-input form-control" accept="image/*,.pdf,video/*,.txt" style="width: 100%;">
+        </div>
+        <div style="width: 200px;">
+          <label style="font-size: var(--font-size-xs); color: var(--color-text-secondary); display: block; margin-bottom: 4px;">Category</label>
+          <select class="exhibit-category-select form-control" style="width: 100%;">
+            ${optionsHtml}
+          </select>
+        </div>
+        <button type="button" class="btn btn-icon btn-danger-ghost remove-exhibit-slot" style="margin-top: 20px;" title="Remove Slot">
+          <span class="material-icons">close</span>
+        </button>
+      `;
+
+      exhibitsListContainer.appendChild(item);
+      updateRemoveButtonsVisibility();
+    });
+
+    exhibitsListContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.remove-exhibit-slot');
+      if (btn) {
+        btn.closest('.exhibit-slot-item').remove();
+        updateRemoveButtonsVisibility();
+      }
+    });
+  }
+
+  function updateRemoveButtonsVisibility() {
+    const slots = exhibitsListContainer.querySelectorAll('.exhibit-slot-item');
+    slots.forEach((slot) => {
+      const btn = slot.querySelector('.remove-exhibit-slot');
+      if (btn) {
+        btn.style.display = slots.length > 1 ? 'block' : 'none';
+      }
+    });
+  }
+
+  function updateFormFields() {
+    const selected = filingTypeSelect.value;
+    const schema = filingSchemas[selected];
+    if (!schema) return;
+    const supportsCharges = schema.ui?.charges;
+    const supportsEvidence = schema.ui?.evidence;
+    const requiresOfficerSignature = schema.requirements.officerSignature;
+
+    if (selected === 'warrant_request') {
+      if (accusedIdGroup) accusedIdGroup.style.display = 'block';
+      setSectionVisibility(chargesSection, supportsCharges);
+      setSectionVisibility(attachmentsSection, supportsEvidence);
+      setSectionVisibility(officerSignatureSection, requiresOfficerSignature);
+      if (narrativeTitle) narrativeTitle.innerText = 'Statement of Probable Cause';
+      if (narrativeLabel) narrativeLabel.innerHTML = 'Statement of Probable Cause <span class="required">*</span>';
+      if (narrativeTextarea) narrativeTextarea.placeholder = 'Describe the probable cause...';
+    } else if (selected === 'case_filing') {
+      if (accusedIdGroup) accusedIdGroup.style.display = 'none';
+      setSectionVisibility(chargesSection, supportsCharges);
+      setSectionVisibility(attachmentsSection, supportsEvidence);
+      setSectionVisibility(officerSignatureSection, requiresOfficerSignature);
+      if (narrativeTitle) narrativeTitle.innerText = 'Affidavit Statement';
+      if (narrativeLabel) narrativeLabel.innerHTML = 'Affidavit Statement <span class="required">*</span>';
+      if (narrativeTextarea) narrativeTextarea.placeholder = 'Describe the events and facts in detail...';
+    }
+  }
+
+  if (filingTypeSelect) {
+    filingTypeSelect.addEventListener('change', updateFormFields);
+    updateFormFields(); // Run on load
+  }
+
+  function getFormData() {
+    const form = document.getElementById('filing-form');
+    const formData = new FormData();
+    formData.append('accused_name', form.querySelector('#accused_name').value);
+    formData.append('accused_id_number', form.querySelector('#accused_id_number').value);
+    formData.append('filing_type', form.querySelector('#filing_type').value);
+    formData.append('narrative', form.querySelector('#narrative').value);
+
+    const selectedCharges = chargesSection && chargesSection.style.display !== 'none'
+      ? Array.from(form.querySelectorAll('input[name="charges"]:checked')).map(cb => cb.value)
+      : [];
+    selectedCharges.forEach(charge => {
+      formData.append('charges', charge);
+    });
+
+    if (attachmentsSection && attachmentsSection.style.display !== 'none') {
+      const fileInputs = form.querySelectorAll('.exhibit-file-input');
+      fileInputs.forEach(input => {
+        if (input.files && input.files[0]) {
+          formData.append('files', input.files[0]);
+          const slotItem = input.closest('.exhibit-slot-item');
+          const catSelect = slotItem.querySelector('.exhibit-category-select');
+          formData.append('categories', catSelect ? catSelect.value : 'evidence_photo');
+        }
+      });
+    }
+
+    const officerSigFile = document.getElementById('officer-signature-file');
+    if (officerSignatureSection && officerSignatureSection.style.display !== 'none' && officerSigFile && officerSigFile.files && officerSigFile.files[0]) {
+      formData.append('files', officerSigFile.files[0]);
+      formData.append('categories', 'officer_signature');
+    }
+    return formData;
+  }
+
+  // ── Save Draft ──
+  document.getElementById('save-draft-btn').addEventListener('click', async () => {
+    const saveBtn = document.getElementById('save-draft-btn');
+    const originalText = saveBtn.innerHTML;
+
+    const form = document.getElementById('filing-form');
+    
+    if (!form.querySelector('#accused_name').value) {
+      alert('Accused name is required');
+      return;
+    }
+    
+    if (!form.querySelector('#filing_type').value) {
+      alert('Filing type is required');
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="material-icons spin">autorenew</span> Saving...';
+
+    const formData = getFormData();
+
+    try {
+      let res;
+      if (isEdit) {
+        res = await fetch('/filings/' + filingNumber, {
+          method: 'PUT',
+          body: formData
+        });
+      } else {
+        res = await fetch('/filings', {
+          method: 'POST',
+          body: formData
+        });
+      }
+
+      const result = await res.json();
+      if (result.success) {
+        window.location.href = result.redirect || '/filings/' + (result.filing_number || filingNumber);
+      } else {
+        alert(result.error || 'Failed to save filing');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+      }
+    } catch (err) {
+      console.error('Save error:', err);
+      alert('Failed to save filing');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = originalText;
+    }
+  });
+
+  // ── Submit to DA (e-signature flow) ──
+  const submitBtn = document.getElementById('submit-filing-btn');
+  const esignModal = document.getElementById('esign-modal');
+  const esignClose = document.getElementById('esign-close');
+  const esignCancel = document.getElementById('esign-cancel');
+  const esignConfirm = document.getElementById('esign-confirm');
+  const esignPassword = document.getElementById('esign-password');
+  const esignAttest = document.getElementById('esign-attest');
+  const officerSigFile = document.getElementById('officer-signature-file');
+ 
+  if (submitBtn) {
+    submitBtn.addEventListener('click', () => {
+      const schema = filingSchemas[filingTypeSelect.value];
+      const requiresOfficerSignature = Boolean(schema?.requirements?.officerSignature);
+      // Validate signature is present before opening modal
+      if (requiresOfficerSignature && !hasOfficerSignature && (!officerSigFile.files || officerSigFile.files.length === 0)) {
+        alert('Please upload your signature image before submitting');
+        return;
+      }
+      esignModal.classList.add('show');
+    });
+  }
+
+  if (esignClose) esignClose.addEventListener('click', () => esignModal.classList.remove('show'));
+  if (esignCancel) esignCancel.addEventListener('click', () => esignModal.classList.remove('show'));
+
+  function checkEsignReady() {
+    if (esignConfirm) {
+      const schema = filingSchemas[filingTypeSelect.value];
+      const signatureReady = !schema?.requirements?.officerSignature || hasOfficerSignature || (officerSigFile && officerSigFile.files.length > 0);
+      esignConfirm.disabled = !(esignPassword.value.length > 0 && esignAttest.checked && signatureReady);
+    }
+  }
+  if (esignPassword) esignPassword.addEventListener('input', checkEsignReady);
+  if (esignAttest) esignAttest.addEventListener('change', checkEsignReady);
+  if (officerSigFile) officerSigFile.addEventListener('change', checkEsignReady);
+
+  if (esignConfirm) {
+    esignConfirm.addEventListener('click', async () => {
+      const originalText = esignConfirm.innerHTML;
+      esignConfirm.disabled = true;
+      esignConfirm.innerHTML = '<span class="material-icons spin">autorenew</span> Submitting...';
+
+      try {
+        let targetFilingNumber = filingNumber;
+
+        // Step 2: Save draft before submitting (new filings or edits with unsaved changes)
+        const form = document.getElementById('filing-form');
+        if (!form.querySelector('#accused_name').value) {
+          alert('Accused name is required before submitting');
+          esignModal.classList.remove('show');
+          esignConfirm.disabled = false;
+          esignConfirm.innerHTML = originalText;
+          return;
+        }
+        if (!form.querySelector('#filing_type').value) {
+          alert('Filing type is required before submitting');
+          esignModal.classList.remove('show');
+          esignConfirm.disabled = false;
+          esignConfirm.innerHTML = originalText;
+          return;
+        }
+
+        const formData = getFormData();
+        const saveUrl = isEdit ? '/filings/' + filingNumber : '/filings';
+        const saveMethod = isEdit ? 'PUT' : 'POST';
+        const saveRes = await fetch(saveUrl, {
+          method: saveMethod,
+          body: formData
+        });
+        const saveResult = await saveRes.json();
+
+        if (!saveResult.success) {
+          alert(saveResult.error || 'Failed to save filing draft before submission');
+          esignConfirm.disabled = false;
+          esignConfirm.innerHTML = originalText;
+          return;
+        }
+        targetFilingNumber = saveResult.filing_number || filingNumber;
+
+        // Step 3: Submit the filing
+        const submitRes = await fetch('/filings/' + targetFilingNumber + '/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ attestation_confirmed: true, password: esignPassword.value })
+        });
+        const submitResult = await submitRes.json();
+
+        if (submitResult.success) {
+          window.location.href = '/filings/' + targetFilingNumber;
+        } else {
+          alert(submitResult.error || 'Failed to submit filing');
+          esignConfirm.disabled = false;
+          esignConfirm.innerHTML = originalText;
+        }
+      } catch (err) {
+        console.error('Submit error:', err);
+        alert('Failed to submit filing');
+        esignConfirm.disabled = false;
+        esignConfirm.innerHTML = originalText;
+      }
+    });
+  }
+
+  // ── Attachment Upload ──
+  const uploadBtn = document.getElementById('upload-btn');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', async () => {
+      const fileInputs = document.querySelectorAll('.exhibit-file-input');
+      const formData = new FormData();
+      let hasFiles = false;
+
+      fileInputs.forEach(input => {
+        if (input.files && input.files[0]) {
+          formData.append('files', input.files[0]);
+          const slotItem = input.closest('.exhibit-slot-item');
+          const catSelect = slotItem.querySelector('.exhibit-category-select');
+          formData.append('categories', catSelect ? catSelect.value : 'evidence_photo');
+          hasFiles = true;
+        }
+      });
+
+      if (!hasFiles) {
+        alert('Select at least one file to upload');
+        return;
+      }
+
+      try {
+        const res = await fetch('/filings/' + filingNumber + '/attachments', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json();
+        if (result.success) {
+          location.reload();
+        } else {
+          alert(result.error || 'Upload failed');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        alert('Upload failed');
+      }
+    });
+  }
+
+  // ── Delete Attachment ──
+  document.querySelectorAll('.delete-attachment').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Remove this attachment?')) return;
+      const filingNum = btn.dataset.filing;
+      const attId = btn.dataset.id;
+
+      try {
+        const res = await fetch('/filings/' + filingNum + '/attachments/' + attId, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.success) {
+          btn.closest('.attachment-item').remove();
+        } else {
+          alert(result.error || 'Failed to remove');
+        }
+      } catch (err) {
+        alert('Failed to remove attachment');
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,576 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .processing-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--space-md);
+  }
+  .approve-loading-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  #approve-btn.is-loading {
+    pointer-events: none;
+    opacity: 0.9;
+  }
+</style>
+
+<main class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Review Filing <%= filing.filing_number %></h1>
+      <span class="status-badge status-<%= filing.status %>"><%= filing.status.replace(/_/g, ' ') %></span>
+    </div>
+    <div class="page-header-actions">
+      <a href="/da-review" class="btn btn-ghost">
+        <span class="material-icons">arrow_back</span>
+        Back to Queue
+      </a>
+    </div>
+  </div>
+
+  <!-- Action Bar (for assigned reviewer on under_review filings) -->
+  <% if (isAssignedReviewer && filing.status === 'under_review') { %>
+    <div class="action-bar">
+      <button class="btn btn-primary" id="approve-btn" disabled>
+        <span class="material-icons">check_circle</span>
+        Approve & Generate Documents
+      </button>
+      <button class="btn btn-warning" id="revise-btn">
+        <span class="material-icons">assignment_return</span>
+        Request Revision
+      </button>
+      <button class="btn btn-danger" id="dismiss-btn">
+        <span class="material-icons">block</span>
+        Dismiss Filing
+      </button>
+    </div>
+  <% } %>
+
+  <% if (filing.status === 'submitted' && !isAssignedReviewer) { %>
+    <div class="action-bar">
+      <button class="btn btn-primary" id="claim-btn">
+        <span class="material-icons">assignment_ind</span>
+        Claim for Review
+      </button>
+    </div>
+  <% } %>
+
+  <div class="detail-grid">
+    <!-- Left: Filing Data -->
+    <div class="detail-main">
+      <!-- Document Information -->
+      <div class="detail-section">
+        <h2><span class="material-icons">feed</span> Filing Information</h2>
+        <div class="detail-fields">
+          <div class="detail-field">
+            <span class="detail-label">Filing Type</span>
+            <span class="detail-value">
+              <%= Object.values(FILING_TYPES).flat().find(t => t.value === filing.filing_type)?.label || filing.filing_type %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Defendant -->
+      <div class="detail-section">
+        <h2><span class="material-icons">person</span> Accused</h2>
+        <div class="detail-fields">
+          <div class="detail-field">
+            <span class="detail-label">Name</span>
+            <span class="detail-value"><%= filing.accused_name %></span>
+          </div>
+          <% if (filing.accused_id_number) { %>
+            <div class="detail-field">
+              <span class="detail-label">ID Number</span>
+              <span class="detail-value"><%= filing.accused_id_number %></span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Charges -->
+      <div class="detail-section">
+        <h2><span class="material-icons">gavel</span> Charges</h2>
+        <div class="charges-list">
+          <% if (filing.charges && filing.charges.length > 0) { %>
+            <% filing.charges.forEach(code => { %>
+              <div class="charge-item">
+                <span class="charge-code"><%= code %></span>
+                <% if (chargeMap[code]) { %>
+                  <span class="charge-name"><%= chargeMap[code].label %></span>
+                  <span class="charge-category category-<%= chargeMap[code].category %>"><%= chargeMap[code].category %></span>
+                <% } %>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="empty-text">No charges listed</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Affidavit -->
+      <div class="detail-section">
+        <h2><span class="material-icons">description</span> Narrative / Affidavit</h2>
+        <div class="affidavit-content">
+          <% if (filing.narrative) { %>
+            <p class="narrative-text"><%= filing.narrative %></p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- DA Reviewer Signature (visible only during review when assigned) -->
+      <% if (isAssignedReviewer && filing.status === 'under_review') { %>
+        <div class="detail-section" id="da-signature-section">
+          <h2><span class="material-icons">draw</span> DA Signature</h2>
+          <div class="form-group" style="background: var(--color-bg-secondary); padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <label for="da-signature-file-page" style="font-weight: var(--font-weight-semibold); display: block; margin-bottom: var(--space-xs);">
+              DA Signature Image (PNG/JPG) <span class="required">*</span>
+            </label>
+            <input type="file" id="da-signature-file-page" accept="image/*" class="form-control" style="width: 100%; max-width: 400px;" required>
+            <p class="form-help" style="margin-top: var(--space-xs); color: var(--color-text-secondary); font-size: var(--font-size-sm);">Please upload your signature image to approve this filing.</p>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Evidence Attachments -->
+      <div class="detail-section">
+        <% const evidenceAtts = attachments.filter(a => a.category !== 'officer_signature' && a.category !== 'da_signature' && !/signature|sig\b/i.test(a.original_name || '')) %>
+        <h2><span class="material-icons">attach_file</span> Evidence Attachments (<%= evidenceAtts.length %>)</h2>
+        <% if (evidenceAtts.length > 0) { %>
+          <div class="attachments-grid">
+            <% evidenceAtts.forEach(att => { %>
+              <div class="attachment-card">
+                <span class="material-icons">insert_drive_file</span>
+                <div class="attachment-info">
+                  <span class="attachment-name"><%= att.original_name %></span>
+                  <span class="attachment-meta"><%= att.category %></span>
+                </div>
+                <a href="/files/attachments/<%= att._id %>" target="_blank" class="btn btn-icon" title="View">
+                  <span class="material-icons">open_in_new</span>
+                </a>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="empty-text">No evidence attachments</p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Right: Sidebar -->
+    <div class="detail-aside">
+      <!-- Submitter Info -->
+      <div class="aside-card">
+        <h3>Submitting Officer</h3>
+        <div class="meta-list">
+          <div class="meta-item">
+            <span class="meta-label">Name</span>
+            <span class="meta-value"><%= submitter ? submitter.name : 'Unknown' %></span>
+          </div>
+          <% if (submitter) { %>
+            <div class="meta-item">
+              <span class="meta-label">Username</span>
+              <span class="meta-value"><%= submitter.username %></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Position</span>
+              <span class="meta-value"><%= submitter.position %></span>
+            </div>
+          <% } %>
+          <div class="meta-item">
+            <span class="meta-label">Submitted</span>
+            <span class="meta-value"><%= filing.attested_at ? new Date(filing.attested_at).toLocaleString() : new Date(filing.created_at).toLocaleString() %></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generated Documents -->
+      <div class="aside-card" id="generated-docs-section">
+        <h3><span class="material-icons" style="vertical-align: middle;">description</span> Generated Docs (<%= generatedDocs.length %>)</h3>
+        <% if (generatedDocs.length > 0) { %>
+          <div class="generated-docs-list">
+            <% generatedDocs.forEach(doc => { %>
+              <div class="generated-doc-item-wrapper" style="margin-bottom: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-secondary); padding: var(--space-md);">
+                <div class="generated-doc-item" style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                    <span class="material-icons">description</span>
+                    <div class="doc-info">
+                      <span class="doc-name" style="font-weight: var(--font-weight-semibold); display: block;">Generated Document (v<%= doc.version %>)</span>
+                      <span class="doc-meta" style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><%= new Date(doc.generated_at).toLocaleString() %></span>
+                    </div>
+                  </div>
+                  <div class="doc-actions" style="display: flex; gap: var(--space-xs);">
+                      <a href="/api/documents/<%= doc._id %>/docx" class="btn btn-icon" title="Download Word Document">
+                        <span class="material-icons" style="color: #ff3b3b;">description</span>
+                      </a>
+                      <% if (doc.page_count > 0) { %>
+                        <a href="/api/documents/<%= doc._id %>/pages/1" target="_blank" class="btn btn-icon" title="Preview first image page">
+                          <span class="material-icons">image</span>
+                        </a>
+                      <% } %>
+                    </div>
+                    <button type="button" class="btn btn-icon regenerate-doc-btn" data-id="<%= doc._id %>" title="Regenerate Document">
+                      <span class="material-icons">sync</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="empty-text">No documents generated yet. They will be auto-generated upon approval.</p>
+        <% } %>
+      </div>
+      <!-- Timeline -->
+      <div class="aside-card">
+        <h3>Timeline</h3>
+        <div class="timeline">
+          <% timeline.forEach(entry => { %>
+            <div class="timeline-item">
+              <div class="timeline-dot status-<%= entry.status %>"></div>
+              <div class="timeline-content">
+                <span class="timeline-status"><%= entry.status.replace(/_/g, ' ') %></span>
+                <% if (entry.note) { %>
+                  <p class="timeline-note"><%= entry.note %></p>
+                <% } %>
+                <span class="timeline-meta">
+                  <% if (actorMap[entry.changed_by?.toString()]) { %>
+                    <%= actorMap[entry.changed_by.toString()].name %>
+                  <% } %>
+                  - <%= new Date(entry.timestamp).toLocaleString() %>
+                </span>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Approval Modal -->
+<div class="modal-overlay" id="approve-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Approve & Generate Documents</h2>
+      <button type="button" class="btn btn-icon" id="approve-close" aria-label="Close approval dialog">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Confirm your password to approve this filing and apply the selected DA signature.</p>
+      <div class="form-group">
+        <label for="approve-password">Re-enter your password</label>
+        <input type="password" id="approve-password" placeholder="Your password" autocomplete="current-password" required>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="approve-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="approve-confirm" disabled>
+        <span class="material-icons">check</span>
+        Confirm & Approve
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Revision Modal -->
+<div class="modal-overlay" id="revision-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Request Revision</h2>
+      <button type="button" class="btn btn-icon" id="revision-close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="revision-reason">Reason</label>
+        <select id="revision-reason" required>
+          <option value="">Select a reason</option>
+          <% Object.entries(REVISION_REASONS).forEach(([key, val]) => { %>
+            <option value="<%= val %>"><%= REVISION_REASON_LABELS[val] || val %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="revision-note">Additional Notes</label>
+        <textarea id="revision-note" rows="4" placeholder="Provide specific details about what needs to be corrected..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="revision-cancel">Cancel</button>
+      <button type="button" class="btn btn-warning" id="revision-confirm">
+        <span class="material-icons">assignment_return</span>
+        Send Revision Request
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const filingNumber = '<%= filing.filing_number %>';
+
+  // Claim
+  const claimBtn = document.getElementById('claim-btn');
+  if (claimBtn) {
+    claimBtn.addEventListener('click', async () => {
+      if (!confirm('Claim this filing for review?')) return;
+      claimBtn.disabled = true;
+      try {
+        const res = await fetch('/da-review/' + filingNumber + '/claim', { method: 'POST' });
+        const result = await res.json();
+        if (result.success) location.reload();
+        else { alert(result.error); claimBtn.disabled = false; }
+      } catch { alert('Failed to claim filing'); claimBtn.disabled = false; }
+    });
+  }
+
+  // Approve Modal Trigger
+  const approveBtn = document.getElementById('approve-btn');
+  const approveModal = document.getElementById('approve-modal');
+  const approveClose = document.getElementById('approve-close');
+  const approveCancel = document.getElementById('approve-cancel');
+  const approveConfirm = document.getElementById('approve-confirm');
+  const approvePassword = document.getElementById('approve-password');
+  const daSigFile = document.getElementById('da-signature-file-page');
+  const loadingModal = document.getElementById('loading-modal');
+
+  function updateApproveButtonState() {
+    if (approveBtn && daSigFile) {
+      const hasFile = daSigFile.files && daSigFile.files.length > 0;
+      if (!approveBtn.classList.contains('is-loading')) {
+        approveBtn.disabled = !hasFile;
+      }
+      console.log('[DA Review] File selected:', hasFile, 'Button disabled:', approveBtn.disabled);
+    } else {
+      console.log('[DA Review] Missing elements - approveBtn:', !!approveBtn, 'daSigFile:', !!daSigFile);
+    }
+  }
+
+  function setApproveLoading(isLoading) {
+    if (!approveBtn) return;
+    if (isLoading) {
+      if (!approveBtn.dataset.originalHtml) {
+        approveBtn.dataset.originalHtml = approveBtn.innerHTML;
+      }
+      approveBtn.classList.add('is-loading');
+      approveBtn.disabled = true;
+      approveBtn.innerHTML = '<span class="approve-loading-spinner" aria-hidden="true"></span><span>Generating Documents...</span>';
+    } else if (approveBtn.dataset.originalHtml) {
+      approveBtn.classList.remove('is-loading');
+      approveBtn.innerHTML = approveBtn.dataset.originalHtml;
+      delete approveBtn.dataset.originalHtml;
+      updateApproveButtonState();
+    }
+  }
+
+  if (daSigFile) {
+    daSigFile.addEventListener('change', () => {
+      console.log('[DA Review] File input changed');
+      updateApproveButtonState();
+    });
+    updateApproveButtonState(); // Run initially
+  } else {
+    console.log('[DA Review] DA signature file input not found');
+  }
+
+  async function approveFiling() {
+    const sigFile = daSigFile && daSigFile.files ? daSigFile.files[0] : null;
+    if (!sigFile || !approvePassword?.value) return;
+
+    setApproveLoading(true);
+    if (approveModal) approveModal.classList.remove('show');
+    if (loadingModal) loadingModal.classList.add('show');
+
+    const formData = new FormData();
+    formData.append('da_signature_file', sigFile);
+    formData.append('approval_password', approvePassword.value);
+
+    try {
+      const res = await fetch('/da-review/' + filingNumber + '/approve', { method: 'POST', body: formData });
+      const result = await res.json();
+      if (result.success) {
+        location.reload();
+        return;
+      }
+      alert(result.error || 'Failed to approve filing');
+    } catch (err) {
+      console.error('[DA Review] Approval error:', err);
+      alert('Error approving filing: ' + err.message);
+    }
+    if (loadingModal) loadingModal.classList.remove('show');
+    setApproveLoading(false);
+  }
+
+  if (approveBtn) {
+    approveBtn.addEventListener('click', () => {
+      const sigFile = daSigFile && daSigFile.files ? daSigFile.files[0] : null;
+      if (!sigFile) return alert('Please select a DA signature image file.');
+      if (approvePassword) approvePassword.value = '';
+      if (approveConfirm) approveConfirm.disabled = true;
+      if (approveModal) approveModal.classList.add('show');
+    });
+  }
+  if (approvePassword) {
+    approvePassword.addEventListener('input', () => {
+      if (approveConfirm) approveConfirm.disabled = approvePassword.value.length === 0;
+    });
+  }
+  if (approveClose) approveClose.addEventListener('click', () => approveModal?.classList.remove('show'));
+  if (approveCancel) approveCancel.addEventListener('click', () => approveModal?.classList.remove('show'));
+  if (approveConfirm) approveConfirm.addEventListener('click', approveFiling);
+
+  // Dismiss
+  const dismissBtn = document.getElementById('dismiss-btn');
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', async () => {
+      if (!confirm('Dismiss this filing completely? It will be closed and no further action can be taken.')) return;
+      dismissBtn.disabled = true;
+      try {
+        const res = await fetch('/da-review/' + filingNumber + '/dismiss', { method: 'POST' });
+        const result = await res.json();
+        if (result.success) location.reload();
+        else { alert(result.error); dismissBtn.disabled = false; }
+      } catch { alert('Failed to dismiss'); dismissBtn.disabled = false; }
+    });
+  }
+
+  // Revision Modal
+  const reviseBtn = document.getElementById('revise-btn');
+  const revisionModal = document.getElementById('revision-modal');
+  const revisionClose = document.getElementById('revision-close');
+  const revisionCancel = document.getElementById('revision-cancel');
+  const revisionConfirm = document.getElementById('revision-confirm');
+
+  if (reviseBtn) {
+    reviseBtn.addEventListener('click', () => { if (revisionModal) revisionModal.classList.add('show'); });
+  }
+  if (revisionClose) revisionClose.addEventListener('click', () => { if (revisionModal) revisionModal.classList.remove('show'); });
+  if (revisionCancel) revisionCancel.addEventListener('click', () => { if (revisionModal) revisionModal.classList.remove('show'); });
+
+  if (revisionConfirm) {
+    revisionConfirm.addEventListener('click', async () => {
+      const reason = document.getElementById('revision-reason').value;
+      const note = document.getElementById('revision-note').value;
+      if (!reason) { alert('Select a revision reason'); return; }
+
+      revisionConfirm.disabled = true;
+      try {
+        const res = await fetch('/da-review/' + filingNumber + '/revise', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ revision_reason: reason, revision_note: note })
+        });
+        const result = await res.json();
+        if (result.success) location.reload();
+        else { alert(result.error); revisionConfirm.disabled = false; }
+      } catch { alert('Failed to request revision'); revisionConfirm.disabled = false; }
+    });
+  }
+
+  // Regenerate Document
+  document.querySelectorAll('.regenerate-doc-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to regenerate this document? It will overwrite the existing version.')) return;
+      
+      const docId = btn.dataset.id;
+      const loadingModal = document.getElementById('loading-modal');
+      if (loadingModal) loadingModal.classList.add('show');
+
+      try {
+        const res = await fetch('/api/documents/' + docId + '/regenerate', { method: 'POST' });
+        const result = await res.json();
+        if (result.success) {
+          location.reload();
+        } else {
+          alert(result.error || 'Failed to regenerate document');
+          if (loadingModal) loadingModal.classList.remove('show');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error regenerating document');
+        if (loadingModal) loadingModal.classList.remove('show');
+      }
+    });
+  });
+
+  // Intercept Download Document clicks to show loader
+  document.querySelectorAll('a[href$="/docx"], a[href$="/pdf"]').forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      const loadingModal = document.getElementById('loading-modal');
+      let originalH3 = '', originalP = '';
+      if (loadingModal) {
+        const h3 = loadingModal.querySelector('h3');
+        const p = loadingModal.querySelector('p');
+        if (h3) { originalH3 = h3.textContent; h3.textContent = 'Downloading Document'; }
+        if (p) { originalP = p.textContent; p.textContent = 'Please wait while your document is being downloaded...'; }
+        loadingModal.classList.add('show');
+      }
+
+      try {
+        const response = await fetch(link.href);
+        if (!response.ok) throw new Error('Download failed');
+        
+        const blob = await response.blob();
+        const disposition = response.headers.get('content-disposition');
+        let filename = 'document.docx';
+        if (disposition && disposition.includes('attachment')) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) { 
+                filename = matches[1].replace(/['"]/g, '');
+            }
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Download error:', err);
+        alert('Error downloading document: ' + err.message);
+      } finally {
+        if (loadingModal) {
+          loadingModal.classList.remove('show');
+          const h3 = loadingModal.querySelector('h3');
+          const p = loadingModal.querySelector('p');
+          if (h3 && originalH3) h3.textContent = originalH3;
+          if (p && originalP) p.textContent = originalP;
+        }
+      }
+    });
+  });
+</script>
+
+<!-- Processing Loader Modal -->
+<div class="modal-overlay" id="loading-modal" style="z-index: 9999;">
+  <div class="modal-content" style="max-width: 400px; text-align: center; padding: var(--space-xl); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <div class="processing-spinner"></div>
+    <h3 style="margin: 0; margin-bottom: var(--space-xs);">Generating Documents</h3>
+    <p style="color: var(--color-text-secondary); margin: 0; font-size: var(--font-size-sm);">Please wait while the official Word document is generated. This may take a few seconds...</p>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

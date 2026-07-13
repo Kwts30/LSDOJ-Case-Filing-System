@@ -1,0 +1,61 @@
+<!-- Request for Warrant Form -->
+<section class="form-section active" id="requestforwarrant-section">
+    <div class="section-header">
+        <h2><i class="fas fa-file-signature"></i> Request for Warrant</h2>
+    </div>
+    <form id="requestforwarrant-manual-form" action="/api/documents/generate-manual" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="template" value="requestforwarrant">
+        
+        <div class="form-group">
+            <div class="form-group-content open">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="filing_number">Filing Number</label>
+                        <input type="text" id="filing_number" name="filing_number" class="form-control" required placeholder="e.g. LSPD-2026-001">
+                    </div>
+                    <div class="input-group">
+                        <label for="officer_name">Officer Name</label>
+                        <input type="text" id="officer_name" name="officer_name" class="form-control" required placeholder="e.g. Officer John Doe" value="<%= department === 'LSPD' ? username : '' %>">
+                    </div>
+                    <div class="input-group">
+                        <label for="badge_number">Badge Number</label>
+                        <input type="text" id="badge_number" name="badge_number" class="form-control" required placeholder="e.g. 1234" value="<%= typeof badge_number !== 'undefined' && badge_number ? badge_number : (department === 'LSPD' ? username : '') %>">
+                    </div>
+                    <div class="input-group">
+                        <label for="accused_name">Accused Name</label>
+                        <input type="text" id="accused_name" name="accused_name" class="form-control" required placeholder="e.g. Jane Smith">
+                    </div>
+                    <div class="input-group">
+                        <label for="accused_id_number">Accused ID Number</label>
+                        <input type="text" id="accused_id_number" name="accused_id_number" class="form-control" required placeholder="e.g. ID-5678">
+                    </div>
+                    <div class="input-group">
+                        <label for="charges">Charges</label>
+                        <input type="text" id="charges" name="charges" class="form-control" required placeholder="e.g. PC-101, PC-102">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="narrative">Narrative</label>
+                        <textarea id="narrative" name="narrative" class="form-control" rows="6" required placeholder="Describe the probable cause..."></textarea>
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="evidence_images">Evidence Images (Optional)</label>
+                        <input type="file" id="evidence_images" name="evidence_images" class="form-control" accept="image/*" multiple>
+                    </div>
+                    <div class="input-group">
+                        <label for="doj_name">Approving DA Name</label>
+                        <input type="text" id="doj_name" name="doj_name" class="form-control" required placeholder="e.g. ADA Mike Ross" value="<%= department === 'DA' ? username : '' %>">
+                    </div>
+                    <div class="input-group">
+                        <label for="doj_position">DA Position</label>
+                        <input type="text" id="doj_position" name="doj_position" class="form-control" required placeholder="e.g. District Attorney" value="">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span class="material-icons">download</span> Download Document
+            </button>
+        </div>
+    </form>
+</section>

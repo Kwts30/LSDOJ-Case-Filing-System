@@ -1,0 +1,184 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Filing Review Queue</h1>
+      <p class="page-subtitle">Review submitted filings, generate documents, and process approvals</p>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="material-icons stat-icon">pending_actions</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.totalSubmitted %></span>
+        <span class="stat-label">Awaiting Review</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons stat-icon">rate_review</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.totalMyReviews %></span>
+        <span class="stat-label">My Active Reviews</span>
+      </div>
+    </div>
+    <div class="stat-card <%= stats.totalEscalated > 0 ? 'stat-card--alert' : '' %>">
+      <span class="material-icons stat-icon">warning</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.totalEscalated %></span>
+        <span class="stat-label">Escalated</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons stat-icon">speed</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.avgTurnaroundHours %>h</span>
+        <span class="stat-label">Avg Turnaround</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Active Reviews -->
+  <% if (myFilings.length > 0) { %>
+    <div class="section">
+      <h2 class="section-title">My Active Reviews</h2>
+      <div class="table-container">
+        <table class="data-table" id="my-reviews-table">
+          <thead>
+            <tr>
+              <th>Filing Number</th>
+              <th>Type</th>
+              <th>Accused</th>
+              <th>Submitted By</th>
+              <th>Status [Under Review]</th>
+              <th>Last Updated</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% myFilings.forEach(f => { %>
+              <tr>
+                <td><a href="/da-review/<%= f.filing_number %>" class="table-link"><%= f.filing_number %></a></td>
+                <td><%= Object.values(FILING_TYPES).flat().find(t => t.value === f.filing_type)?.label || f.filing_type %></td>
+                <td><%= f.accused_name %></td>
+                <td>
+                  <% if (submitterMap[f.submitted_by?.toString()]) { %>
+                    <%= submitterMap[f.submitted_by.toString()].name %>
+                    (<%= submitterMap[f.submitted_by.toString()].username %>)
+                  <% } else { %>
+                    Unknown
+                  <% } %>
+                </td>
+                <td><span class="status-badge status-under_review">Under Review</span></td>
+                <td><%= f.updated_at ? new Date(f.updated_at).toLocaleString() : '' %></td>
+                <td>
+                  <a href="/da-review/<%= f.filing_number %>" class="btn btn-sm btn-primary">
+                    <span class="material-icons">rate_review</span>
+                    Review
+                  </a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Submitted Cases (awaiting claim) -->
+  <div class="section">
+    <h2 class="section-title">Submitted Filings Awaiting Review (<%= submittedFilings.length %>)</h2>
+    <% if (submittedFilings.length === 0) { %>
+      <div class="empty-state">
+        <span class="material-icons empty-icon">check_circle</span>
+        <h3>No pending submissions</h3>
+        <p>All submitted filings have been claimed for review.</p>
+      </div>
+    <% } else { %>
+      <div class="table-container">
+        <table class="data-table" id="submitted-filings-table">
+          <thead>
+            <tr>
+              <th>Filing Number</th>
+              <th>Type</th>
+              <th>Accused</th>
+              <th>Charges</th>
+              <th>Submitted By</th>
+              <th>Submitted</th>
+              <th>Age</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% submittedFilings.forEach(f => { %>
+              <% const isEscalated = escalatedIds.has(f.filing_number); %>
+              <tr class="<%= isEscalated ? 'row-escalated' : '' %>">
+                <td>
+                  <a href="/da-review/<%= f.filing_number %>" class="table-link"><%= f.filing_number %></a>
+                  <% if (isEscalated) { %>
+                    <span class="escalation-flag" title="Past escalation threshold">[ESCALATED]</span>
+                  <% } %>
+                </td>
+                <td><%= Object.values(FILING_TYPES).flat().find(t => t.value === f.filing_type)?.label || f.filing_type %></td>
+                <td><%= f.accused_name %></td>
+                <td><%= (f.charges || []).slice(0, 2).join(', ') %><%= (f.charges || []).length > 2 ? ' +' + ((f.charges || []).length - 2) : '' %></td>
+                <td>
+                  <% if (submitterMap[f.submitted_by?.toString()]) { %>
+                    <%= submitterMap[f.submitted_by.toString()].name %>
+                  <% } else { %>
+                    Unknown
+                  <% } %>
+                </td>
+                <td><%= f.created_at ? new Date(f.created_at).toLocaleDateString() : '' %></td>
+                <td>
+                  <%
+                    const ageMs = Date.now() - (f.created_at ? new Date(f.created_at).getTime() : Date.now());
+                    const ageHours = Math.round(ageMs / (1000 * 60 * 60));
+                  %>
+                  <span class="<%= ageHours > 48 ? 'text-danger' : '' %>"><%= ageHours %>h</span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-primary claim-btn"
+                    data-filing="<%= f.filing_number %>" id="claim-<%= f.filing_number %>">
+                    <span class="material-icons">assignment_ind</span>
+                    Claim
+                  </button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script>
+  // Claim filing handler
+  document.querySelectorAll('.claim-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const filingNumber = btn.dataset.filing;
+      if (!confirm('Claim filing ' + filingNumber + ' for review?')) return;
+
+      btn.disabled = true;
+      try {
+        const res = await fetch('/da-review/' + filingNumber + '/claim', { method: 'POST' });
+        const result = await res.json();
+        if (result.success) {
+          window.location.href = '/da-review/' + filingNumber;
+        } else {
+          alert(result.error || 'Failed to claim filing');
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert('Failed to claim filing');
+        btn.disabled = false;
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

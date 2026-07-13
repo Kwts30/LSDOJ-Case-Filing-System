@@ -1,0 +1,122 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>My Filings</h1>
+      <p class="page-subtitle">Manage your drafted and submitted filings</p>
+    </div>
+    <% if (typeof department !== 'undefined' && department === 'LSPD') { %>
+      <a href="/filings/new" class="btn btn-primary" id="new-filing-btn">
+        <span class="material-icons">add</span>
+        File New Request
+      </a>
+    <% } %>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="material-icons stat-icon">folder</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.total %></span>
+        <span class="stat-label">Total Filings</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons stat-icon">edit_note</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.draft %></span>
+        <span class="stat-label">Drafts</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons stat-icon">send</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.submitted + stats.under_review %></span>
+        <span class="stat-label">Pending Review</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons stat-icon">assignment_return</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.needs_revision %></span>
+        <span class="stat-label">Needs Revision</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <span class="material-icons stat-icon">task_alt</span>
+      <div class="stat-content">
+        <span class="stat-value"><%= stats.filed %></span>
+        <span class="stat-label">Filed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <div class="filter-bar">
+    <a href="/filings" class="filter-chip <%= !statusFilter ? 'active' : '' %>">All</a>
+    <a href="/filings?status=draft" class="filter-chip <%= statusFilter === 'draft' ? 'active' : '' %>">Drafts</a>
+    <a href="/filings?status=submitted" class="filter-chip <%= statusFilter === 'submitted' ? 'active' : '' %>">Submitted</a>
+    <a href="/filings?status=under_review" class="filter-chip <%= statusFilter === 'under_review' ? 'active' : '' %>">Under Review</a>
+    <a href="/filings?status=needs_revision" class="filter-chip <%= statusFilter === 'needs_revision' ? 'active' : '' %>">Needs Revision</a>
+    <a href="/filings?status=filed" class="filter-chip <%= statusFilter === 'filed' ? 'active' : '' %>">Filed</a>
+    <a href="/filings?status=dismissed" class="filter-chip <%= statusFilter === 'dismissed' ? 'active' : '' %>">Dismissed</a>
+  </div>
+
+  <!-- Filings List -->
+  <% if (filings.length === 0) { %>
+    <div class="empty-state">
+      <span class="material-icons empty-icon">folder_open</span>
+      <h3>No filings found</h3>
+      <% if (statusFilter) { %>
+        <p>No filings with status "<%= statusFilter %>". <a href="/filings">View all filings</a></p>
+      <% } else { %>
+        <% if (typeof department !== 'undefined' && department === 'LSPD') { %>
+          <p>You have not created any filings yet. Click "File New Request" to get started.</p>
+        <% } else { %>
+          <p>No filings are currently available in this view.</p>
+        <% } %>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="card-grid">
+      <% filings.forEach(f => { %>
+        <a href="/filings/<%= f.filing_number %>" class="case-card" id="filing-<%= f.filing_number %>">
+          <div class="case-card-header">
+            <span class="case-number"><%= f.filing_number %></span>
+            <span class="status-badge status-<%= f.status %>"><%= f.status.replace(/_/g, ' ') %></span>
+          </div>
+          <div class="case-card-body">
+            <div class="case-defendant">
+              <span class="material-icons">person</span>
+              <span><%= f.accused_name %></span>
+            </div>
+            <% if (f.charges && f.charges.length > 0) { %>
+              <div class="case-charges">
+                <span class="material-icons">gavel</span>
+                <span><%= f.charges.slice(0, 3).join(', ') %><%= f.charges.length > 3 ? ` +${f.charges.length - 3} more` : '' %></span>
+              </div>
+            <% } %>
+            <% if (f.revision_note && f.status === 'needs_revision') { %>
+              <div class="case-revision-note">
+                <span class="material-icons">warning</span>
+                <span><%= f.revision_note.substring(0, 100) %><%= f.revision_note.length > 100 ? '...' : '' %></span>
+              </div>
+            <% } %>
+          </div>
+          <div class="case-card-footer">
+            <span class="case-date">
+              <span class="material-icons">schedule</span>
+              <%= f.updated_at ? new Date(f.updated_at).toLocaleDateString() : '' %>
+            </span>
+            <span class="filing-type-badge"><%= Object.values(FILING_TYPES).flat().find(t => t.value === f.filing_type)?.label || f.filing_type %></span>
+          </div>
+        </a>
+      <% }); %>
+    </div>
+  <% } %>
+</main>
+
+<%- include('../partials/footer') %>

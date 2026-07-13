@@ -1,0 +1,69 @@
+<!-- Affidavit of Complaint Form -->
+<section class="form-section" id="affidavitofcomplaint-section">
+    <div class="section-header">
+        <h2><i class="fas fa-balance-scale"></i> Affidavit of Complaint</h2>
+    </div>
+    <form id="affidavitofcomplaint-manual-form" action="/api/documents/generate-manual" method="POST">
+        <input type="hidden" name="template" value="affidavitofcomplaint">
+        
+        <div class="form-group">
+            <div class="form-group-content open">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="filing_number">Filing Number</label>
+                        <input type="text" id="filing_number" name="filing_number" class="form-control" required placeholder="e.g. LSPD-2026-002">
+                    </div>
+                    <div class="input-group">
+                        <label for="case_reference">Case Reference</label>
+                        <input type="text" id="case_reference" name="case_reference" class="form-control" required placeholder="e.g. CASE-2026-002">
+                    </div>
+                    <div class="input-group">
+                        <label for="accused_name">Accused Name</label>
+                        <input type="text" id="accused_name" name="accused_name" class="form-control" required placeholder="e.g. John Smith">
+                    </div>
+                    <div class="input-group">
+                        <label for="doj_name">DA Name</label>
+                        <input type="text" id="doj_name" name="doj_name" class="form-control" required placeholder="e.g. ADA Mike Ross" value="<%= department === 'DA' ? username : '' %>">
+                    </div>
+                    <div class="input-group">
+                        <label for="doj_position">DA Position</label>
+                        <input type="text" id="doj_position" name="doj_position" class="form-control" required placeholder="e.g. Assistant District Attorney" value="">
+                    </div>
+                    <div class="input-group">
+                        <label for="doj_postition">DA Position (Typo Handled)</label>
+                        <input type="text" id="doj_postition" name="doj_postition" class="form-control" required placeholder="e.g. Assistant District Attorney" value="">
+                    </div>
+                    <div class="input-group full-width">
+                        <label for="affidavit_statement">Affidavit Statement</label>
+                        <textarea id="affidavit_statement" name="affidavit_statement" class="form-control" rows="6" required placeholder="I, being duly sworn..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="notarization_venue">Notarization Venue</label>
+                        <input type="text" id="notarization_venue" name="notarization_venue" class="form-control" required placeholder="e.g. Los Santos">
+                    </div>
+                    <div class="input-group">
+                        <label for="document_no">Document No.</label>
+                        <input type="text" id="document_no" name="document_no" class="form-control" required placeholder="e.g. 1">
+                    </div>
+                    <div class="input-group">
+                        <label for="serial_no">Serial No.</label>
+                        <input type="text" id="serial_no" name="serial_no" class="form-control" required placeholder="e.g. 123">
+                    </div>
+                    <div class="input-group">
+                        <label for="page_no">Page No.</label>
+                        <input type="text" id="page_no" name="page_no" class="form-control" required placeholder="e.g. 1">
+                    </div>
+                    <div class="input-group">
+                        <label for="bar_id">Bar ID</label>
+                        <input type="text" id="bar_id" name="bar_id" class="form-control" required placeholder="e.g. BAR-1234">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span class="material-icons">download</span> Download Document
+            </button>
+        </div>
+    </form>
+</section>

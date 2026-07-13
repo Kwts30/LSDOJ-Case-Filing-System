@@ -13,6 +13,7 @@ const helmetConfig = helmet({
       imgSrc: ["'self'", 'data:', 'blob:'],
       fontSrc: ["'self'", 'cdnjs.cloudflare.com', 'fonts.gstatic.com', 'data:'],
       connectSrc: ["'self'"],
+      formAction: ["'self'"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"]
     }
@@ -57,9 +58,7 @@ const errorHandler = (err, req, res, next) => {
 
   console.error('[Error]', err);
 
-  const response = {
-    error: err.message || 'Internal Server Error'
-  };
+  const response = { error: env === 'production' ? 'Internal Server Error' : (err.message || 'Internal Server Error') };
 
   if (env === 'development') {
     response.stack = err.stack;

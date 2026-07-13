@@ -1,0 +1,331 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h1>Filing <%= filing.filing_number %></h1>
+      <span class="status-badge status-<%= filing.status %>"><%= filing.status.replace(/_/g, ' ') %></span>
+    </div>
+    <div class="page-header-actions">
+      <% if (isOwner && (filing.status === 'draft' || filing.status === 'needs_revision')) { %>
+        <a href="/filings/<%= filing.filing_number %>/edit" class="btn btn-primary">
+          <span class="material-icons">edit</span>
+          Edit Filing
+        </a>
+      <% } %>
+      <a href="/filings" class="btn btn-ghost">
+        <span class="material-icons">arrow_back</span>
+        Back
+      </a>
+    </div>
+  </div>
+
+  <% if (filing.status === 'needs_revision' && filing.revision_note) { %>
+    <div class="alert alert-warning">
+      <span class="material-icons">assignment_return</span>
+      <div>
+        <strong>Revision Required: </strong>
+        <% if (filing.revision_reason && REVISION_REASON_LABELS[filing.revision_reason]) { %>
+          <%= REVISION_REASON_LABELS[filing.revision_reason] %>
+        <% } %>
+        <p><%= filing.revision_note %></p>
+      </div>
+    </div>
+  <% } %>
+
+  <div class="detail-grid">
+    <!-- Left: Filing Info -->
+    <div class="detail-main">
+      <!-- Filing Information -->
+      <div class="detail-section">
+        <h2><span class="material-icons">feed</span> Filing Information</h2>
+        <div class="detail-fields">
+          <div class="detail-field">
+            <span class="detail-label">Filing Type</span>
+            <span class="detail-value">
+              <%= Object.values(FILING_TYPES).flat().find(t => t.value === filing.filing_type)?.label || filing.filing_type %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accused -->
+      <div class="detail-section">
+        <h2><span class="material-icons">person</span> Accused</h2>
+        <div class="detail-fields">
+          <div class="detail-field">
+            <span class="detail-label">Name</span>
+            <span class="detail-value"><%= filing.accused_name %></span>
+          </div>
+          <% if (filing.accused_id_number) { %>
+            <div class="detail-field">
+              <span class="detail-label">ID Number</span>
+              <span class="detail-value"><%= filing.accused_id_number %></span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Charges -->
+      <div class="detail-section">
+        <h2><span class="material-icons">gavel</span> Charges</h2>
+        <div class="charges-list">
+          <% if (filing.charges && filing.charges.length > 0) { %>
+            <% filing.charges.forEach(code => { %>
+              <div class="charge-item">
+                <span class="charge-code"><%= code %></span>
+                <% if (chargeMap[code]) { %>
+                  <span class="charge-name"><%= chargeMap[code].label %></span>
+                  <span class="charge-category category-<%= chargeMap[code].category %>"><%= chargeMap[code].category %></span>
+                <% } %>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <p class="empty-text">No charges listed</p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Narrative -->
+      <div class="detail-section">
+        <h2><span class="material-icons">description</span> Narrative / Affidavit</h2>
+        <div class="affidavit-content">
+          <% if (filing.narrative) { %>
+            <p class="narrative-text"><%= filing.narrative %></p>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Attachments -->
+      <div class="detail-section">
+        <% const evidenceAtts = attachments.filter(a => a.category !== 'officer_signature' && a.category !== 'da_signature' && !/signature|sig\b/i.test(a.original_name || '')) %>
+        <h2><span class="material-icons">attach_file</span> Evidence Attachments (<%= evidenceAtts.length %>)</h2>
+        <% if (evidenceAtts.length > 0) { %>
+          <div class="attachments-grid">
+            <% evidenceAtts.forEach(att => { %>
+              <div class="attachment-card">
+                <span class="material-icons">insert_drive_file</span>
+                <div class="attachment-info">
+                  <span class="attachment-name"><%= att.original_name %></span>
+                  <span class="attachment-meta"><%= att.category %></span>
+                </div>
+                <a href="/files/attachments/<%= att._id %>" target="_blank" class="btn btn-icon" title="View">
+                  <span class="material-icons">open_in_new</span>
+                </a>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="empty-text">No evidence attachments</p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Right: Sidebar Info -->
+    <div class="detail-aside">
+      <!-- Filing Meta -->
+      <div class="aside-card">
+        <h3>Filing Details</h3>
+        <div class="meta-list">
+          <div class="meta-item">
+            <span class="meta-label">Submitted By</span>
+            <span class="meta-value"><%= submitter ? submitter.name : 'Unknown' %></span>
+          </div>
+          <% if (submitter) { %>
+            <div class="meta-item">
+              <span class="meta-label">Username</span>
+              <span class="meta-value"><%= submitter.username %></span>
+            </div>
+          <% } %>
+          <% if (reviewer) { %>
+            <div class="meta-item">
+              <span class="meta-label">DA Reviewer</span>
+              <span class="meta-value"><%= reviewer.name %> (<%= reviewer.position %>)</span>
+            </div>
+          <% } %>
+          <div class="meta-item">
+            <span class="meta-label">Created</span>
+            <span class="meta-value"><%= filing.created_at ? new Date(filing.created_at).toLocaleString() : '' %></span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Last Updated</span>
+            <span class="meta-value"><%= filing.updated_at ? new Date(filing.updated_at).toLocaleString() : '' %></span>
+          </div>
+          <% if (filing.attested_at) { %>
+            <div class="meta-item">
+              <span class="meta-label">Attested</span>
+              <span class="meta-value"><%= new Date(filing.attested_at).toLocaleString() %></span>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Generated Documents -->
+      <% if (generatedDocs.length > 0) { %>
+        <div class="aside-card">
+          <h3><span class="material-icons" style="vertical-align: middle;">description</span> Generated Docs (<%= generatedDocs.length %>)</h3>
+          <div class="generated-docs-list">
+            <% generatedDocs.forEach(doc => { %>
+              <div class="generated-doc-item-wrapper" style="margin-bottom: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-secondary); padding: var(--space-md);">
+                <div class="generated-doc-item" style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                    <span class="material-icons">description</span>
+                    <div class="doc-info">
+                      <span class="doc-name" style="font-weight: var(--font-weight-semibold); display: block;">Generated Document (v<%= doc.version %>)</span>
+                      <span class="doc-meta" style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><%= new Date(doc.generated_at).toLocaleString() %></span>
+                    </div>
+                  </div>
+                  <div class="doc-actions" style="display: flex; gap: var(--space-xs);">
+                      <a href="/api/documents/<%= doc._id %>/docx" class="btn btn-icon" title="Download Word Document">
+                        <span class="material-icons" style="color: #ff3b3b;">description</span>
+                      </a>
+                    <% if (doc.page_count > 0) { %>
+                      <a href="/api/documents/<%= doc._id %>/pages/1" target="_blank" class="btn btn-icon" title="Preview first image page">
+                        <span class="material-icons">image</span>
+                      </a>
+                    <% } %>
+                    <% if (admin_role === 'super_admin' || (department === 'DA' && reviewer && userId && reviewer._id.toString() === userId)) { %>
+                      <button type="button" class="btn btn-icon regenerate-doc-btn" data-id="<%= doc._id %>" title="Regenerate Document">
+                        <span class="material-icons">sync</span>
+                      </button>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% } %>
+      <!-- Timeline -->
+      <div class="aside-card">
+        <h3>Timeline</h3>
+        <div class="timeline">
+          <% timeline.forEach(entry => { %>
+            <div class="timeline-item">
+              <div class="timeline-dot status-<%= entry.status %>"></div>
+              <div class="timeline-content">
+                <span class="timeline-status"><%= entry.status.replace(/_/g, ' ') %></span>
+                <% if (entry.note) { %>
+                  <p class="timeline-note"><%= entry.note %></p>
+                <% } %>
+                <span class="timeline-meta">
+                  <% if (actorMap[entry.changed_by?.toString()]) { %>
+                    <%= actorMap[entry.changed_by.toString()].name %>
+                  <% } %>
+                  - <%= new Date(entry.timestamp).toLocaleString() %>
+                </span>
+              </div>
+            </div>
+          <% }); %>
+          <% if (timeline.length === 0) { %>
+            <p class="empty-text">No timeline entries</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Processing Loader Modal -->
+<div class="modal-overlay" id="loading-modal" style="z-index: 9999;">
+  <div class="modal-content" style="max-width: 400px; text-align: center; padding: var(--space-xl); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <div class="processing-spinner" style="width: 50px; height: 50px; border: 4px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: var(--space-md);"></div>
+    <h3 style="margin: 0; margin-bottom: var(--space-xs);">Generating Documents</h3>
+    <p style="color: var(--color-text-secondary); margin: 0; font-size: var(--font-size-sm);">Please wait while the official PDF and Word documents are regenerated. This may take a few seconds...</p>
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
+<script>
+
+  // Regenerate Document
+  document.querySelectorAll('.regenerate-doc-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to regenerate this document? It will overwrite the existing version.')) return;
+      
+      const docId = btn.dataset.id;
+      const loadingModal = document.getElementById('loading-modal');
+      if (loadingModal) loadingModal.classList.add('show');
+
+      try {
+        const res = await fetch('/api/documents/' + docId + '/regenerate', { method: 'POST' });
+        const result = await res.json();
+        if (result.success) {
+          location.reload();
+        } else {
+          alert(result.error || 'Failed to regenerate document');
+          if (loadingModal) loadingModal.classList.remove('show');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error regenerating document');
+        if (loadingModal) loadingModal.classList.remove('show');
+      }
+    });
+  });
+
+  // Intercept Download Document clicks to show loader
+  document.querySelectorAll('a[href$="/docx"], a[href$="/pdf"]').forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
+      
+      const loadingModal = document.getElementById('loading-modal');
+      let originalH3 = '', originalP = '';
+      if (loadingModal) {
+        const h3 = loadingModal.querySelector('h3');
+        const p = loadingModal.querySelector('p');
+        if (h3) { originalH3 = h3.textContent; h3.textContent = 'Downloading Document'; }
+        if (p) { originalP = p.textContent; p.textContent = 'Please wait while your document is being downloaded...'; }
+        loadingModal.classList.add('show');
+      }
+
+      try {
+        const response = await fetch(link.href);
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || 'Download failed');
+        }
+        
+        const blob = await response.blob();
+        const disposition = response.headers.get('content-disposition');
+        let filename = 'document.docx';
+        if (disposition && disposition.includes('attachment')) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) { 
+                filename = matches[1].replace(/['"]/g, '');
+            }
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Download error:', err);
+        alert('Error downloading document: ' + err.message);
+      } finally {
+        if (loadingModal) {
+          loadingModal.classList.remove('show');
+          const h3 = loadingModal.querySelector('h3');
+          const p = loadingModal.querySelector('p');
+          if (h3 && originalH3) h3.textContent = originalH3;
+          if (p && originalP) p.textContent = originalP;
+        }
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>
