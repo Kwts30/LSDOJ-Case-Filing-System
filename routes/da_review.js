@@ -19,8 +19,6 @@ const upload = multer({
   fileFilter: (_req, file, cb) => cb(null, UPLOAD_LIMITS.allowedMimeTypes.includes(file.mimetype))
 });
 
-Filing.setDB(getDatabase());
-ProsecutionRecord.setDB(getDatabase());
 
 router.get('/', async (req, res) => {
   try {

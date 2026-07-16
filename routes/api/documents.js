@@ -9,7 +9,6 @@ const { logActivity } = require('../../middleware/auth');
 const { generateDocumentForFiling } = require('../../utils/docGenEngine');
 const { validateUploadedFile, isImageMimeType } = require('../../utils/uploadValidation');
 
-GeneratedDocument.setDB(getDatabase());
 
 const upload = multer({
   storage: multer.memoryStorage(),

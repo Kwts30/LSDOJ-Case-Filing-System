@@ -109,8 +109,6 @@ function renderAccessDenied(res) {
   return res.status(403).render('error', { message: 'You do not have access to this filing' });
 }
 
-Filing.setDB(getDatabase());
-Attachment.setDB(getDatabase());
 
 router.get('/', async (req, res) => {
   try {
