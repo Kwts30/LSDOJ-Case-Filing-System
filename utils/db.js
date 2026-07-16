@@ -231,10 +231,25 @@ function getClient() {
   return client;
 }
 
+/**
+ * Get a Promise that resolves to the MongoClient instance.
+ * Useful for connect-mongo which needs a Promise.
+ */
+async function getClientPromise() {
+  if (client) return client;
+  // If not yet connected, we wait for a short bit (polling) or we just rely on initializeDatabase being called first
+  // A better way is to just return a promise that resolves when client is ready.
+  while (!client) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  return client;
+}
+
 module.exports = {
   initializeDatabase,
   getDatabase,
   getClient,
+  getClientPromise,
   closeDatabase,
   ObjectId
 };

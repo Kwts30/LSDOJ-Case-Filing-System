@@ -51,13 +51,9 @@ try {
 app.disable('x-powered-by');
 app.use(helmetConfig);
 
-// Vercel terminates TLS and supplies the real client IP through its trusted
-// proxy. Without this, IP-based rate limits would apply to Vercel itself.
-if (process.env.VERCEL === '1') {
-  app.set('trust proxy', 1);
-} else if (process.env.TRUST_PROXY) {
-  app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : process.env.TRUST_PROXY);
-}
+// Trust the first proxy (e.g., Vercel Edge, Nginx, Heroku). 
+// Without this, Express will refuse to set 'secure: true' cookies because it thinks the connection from the proxy is HTTP.
+app.set('trust proxy', 1);
 
 // Compression & Logging
 app.use(compression());

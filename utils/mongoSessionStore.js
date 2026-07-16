@@ -15,8 +15,10 @@ function createSessionStore() {
     return new session.MemoryStore();
   }
 
+  const { getClientPromise } = require('./db');
+
   return MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
+    clientPromise: getClientPromise(),
     dbName: 'doj-case-filing',
     collectionName: 'app_sessions',
     stringify: false, // store sessions as native BSON objects
