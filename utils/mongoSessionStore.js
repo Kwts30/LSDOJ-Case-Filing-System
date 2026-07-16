@@ -7,21 +7,22 @@ const MongoStore = require('connect-mongo');
  * @param {import('mongodb').Db} db - Active MongoDB Db instance
  * @returns {session.Store}
  */
-function createSessionStore(db) {
+function createSessionStore() {
+  const session = require('express-session');
+  
   // Test / memory-db fallback (used in unit tests)
-  if (db._collections) {
-    const session = require('express-session');
+  if (process.env.NODE_ENV === 'test') {
     return new session.MemoryStore();
   }
 
   return MongoStore.create({
-    client: db.client,
-    dbName: db.databaseName,
+    mongoUrl: process.env.MONGODB_URI,
+    dbName: 'doj-case-filing',
     collectionName: 'app_sessions',
-    stringify: false, // store sessions as native BSON objects (compatible with the old custom store format)
-    ttl: parseInt(process.env.SESSION_MAX_AGE_MS || '3600000', 10) / 1000, // convert ms → seconds
-    autoRemove: 'native', // uses MongoDB TTL index
-    touchAfter: 60 // only update session TTL once per minute to reduce writes
+    stringify: false, // store sessions as native BSON objects
+    ttl: parseInt(process.env.SESSION_MAX_AGE_MS || '3600000', 10) / 1000,
+    autoRemove: 'native', 
+    touchAfter: 60 
   });
 }
 

@@ -32,7 +32,7 @@ async function startServer() {
     validateProductionConfiguration();
     // ===== Initialize Database =====
     db = await initializeDatabase(MONGODB_URI);
-    
+
     console.log('  Database initialized');
 
     // Initialize admin account and seed reference data
