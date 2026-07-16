@@ -110,6 +110,14 @@ router.post('/login', authRateLimitMiddleware, async (req, res) => {
       });
     }
 
+    if (user.account_status === 'inactive') {
+      return res.status(403).render('login', {
+        title: 'Login - Department of Justice Case Filing System',
+        error: null,
+        info: 'Your account is not active. Please contact an administrator.'
+      });
+    }
+
     // Successful login — reset attempts, update last_login
     await db.collection('users').updateOne(
       { _id: user._id },

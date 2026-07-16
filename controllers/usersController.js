@@ -86,8 +86,13 @@ exports.updateUser = async (req, res) => {
     const actor = getActor(req);
     const isSuper = isSuperAdmin(actor);
     if (!canManageUser(actor, targetUser)) return res.status(403).json({ error: 'You can only manage users in your department' });
-    if (!isSuper && (department && department !== actor.department || admin_role !== undefined)) {
-      return res.status(403).json({ error: 'Only a super administrator may change department or administrative role' });
+    if (!isSuper) {
+      if (department !== undefined && department !== targetUser.department) {
+        return res.status(403).json({ error: 'Only a super administrator may change the department of a user' });
+      }
+      if (admin_role !== undefined && admin_role !== targetUser.admin_role) {
+        return res.status(403).json({ error: 'Only a super administrator may change administrative roles' });
+      }
     }
     const effectiveDepartment = department || targetUser.department;
     if (department !== undefined && !DEPARTMENTS.includes(department)) return res.status(400).json({ error: 'Invalid department' });
