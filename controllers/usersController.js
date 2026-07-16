@@ -170,6 +170,7 @@ exports.createUser = async (req, res) => {
       email: null,
       last_login: null,
       login_attempts: 0,
+      login_locked_until: null,
       created_at: new Date(),
       updated_at: new Date()
     };

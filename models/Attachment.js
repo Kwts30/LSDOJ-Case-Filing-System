@@ -15,6 +15,7 @@ const Attachment = {
       image_url = null,
       external_link = null,
       storage_key = null,
+      gridfs_id = null,
       mime_type = null,
       original_name,
       filing_number,
@@ -32,6 +33,7 @@ const Attachment = {
       image_url,
       external_link,
       storage_key,
+      gridfs_id,
       mime_type,
       file_url: null,
       original_name: original_name || 'unnamed',
@@ -41,7 +43,7 @@ const Attachment = {
     };
 
     const result = await db.collection('attachments').insertOne(newAttachment);
-    const file_url = storage_key ? `/files/attachments/${result.insertedId}` : null;
+    const file_url = (storage_key || gridfs_id) ? `/files/attachments/${result.insertedId}` : null;
     if (file_url) {
       await db.collection('attachments').updateOne(
         { _id: result.insertedId },

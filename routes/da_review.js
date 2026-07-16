@@ -6,21 +6,15 @@ const Filing = require('../models/Filing');
 const ProsecutionRecord = require('../models/ProsecutionRecord');
 const { REVISION_REASONS, REVISION_REASON_LABELS, ESCALATION_THRESHOLD_HOURS, STATUS_DISPLAY, FILING_TYPES } = require('../config/constants');
 const { generateDocumentForFiling } = require('../utils/docGenEngine');
-const fs = require('fs');
-const path = require('path');
 const multer = require('multer');
 const { getActor, canReviewFiling } = require('../utils/accessControl');
-const { ensureEvidenceDirectory, storageKeyFor, removeStoredFile } = require('../utils/fileStorage');
+const { storeFileInGridFS, deleteFileFromGridFS } = require('../utils/fileStorage');
 const { validateUploadedFile, isImageMimeType } = require('../utils/uploadValidation');
 const { UPLOAD_LIMITS } = require('../config/constants');
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, ensureEvidenceDirectory()),
-  filename: (_req, _file, cb) => cb(null, `${Date.now()}-${require('crypto').randomBytes(16).toString('hex')}`)
-});
-
+// Use memoryStorage so uploads go to GridFS instead of the local filesystem
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: UPLOAD_LIMITS.maxFileSize, files: 1 },
   fileFilter: (_req, file, cb) => cb(null, UPLOAD_LIMITS.allowedMimeTypes.includes(file.mimetype))
 });
@@ -188,9 +182,7 @@ router.post('/:filingNumber/claim', async (req, res) => {
 router.post('/:filingNumber/approve', upload.single('da_signature_file'), async (req, res) => {
   let signatureAttachment = null;
   let generatedDocument = null;
-  const discardUploadedSignature = () => {
-    if (req.file) removeStoredFile(req.file.path);
-  };
+  let uploadedGridFSId = null;
   try {
     console.log('[DA Approve] Starting approval for filing:', req.params.filingNumber);
     const db = getDatabase();
@@ -203,7 +195,6 @@ router.post('/:filingNumber/approve', upload.single('da_signature_file'), async 
     const actor = getActor(req);
     if (!filing || filing.status !== 'under_review' || !canReviewFiling(actor, filing)) {
       console.log('[DA Approve] Validation failed - Filing:', !!filing, 'Status under_review:', filing?.status === 'under_review', 'User is reviewer:', filing?.da_reviewer?.toString() === req.session.userId);
-      discardUploadedSignature();
       return res.status(404).json({ error: 'Filing not found or you are not the assigned reviewer' });
     }
 
@@ -214,28 +205,26 @@ router.post('/:filingNumber/approve', upload.single('da_signature_file'), async 
 
     const { approval_password: approvalPassword } = req.body;
     if (!approvalPassword) {
-      discardUploadedSignature();
       return res.status(400).json({ error: 'Password confirmation is required to approve a filing' });
     }
     const reviewerAccount = await db.collection('users').findOne({ _id: new ObjectId(actor.id) });
     if (!reviewerAccount || !(await verifyPassword(approvalPassword, reviewerAccount.password_hash))) {
-      discardUploadedSignature();
       return res.status(401).json({ error: 'Password verification failed' });
     }
     const signatureMimeType = await validateUploadedFile(req.file, UPLOAD_LIMITS.allowedMimeTypes);
     if (!isImageMimeType(signatureMimeType)) {
-      discardUploadedSignature();
       return res.status(400).json({ error: 'DA signature must be a PNG, JPG, or WEBP image' });
     }
 
-    console.log('[DA Approve] Saving signature attachment:', req.file.filename);
-    // Save DA signature attachment
+    // Store signature in GridFS
+    uploadedGridFSId = await storeFileInGridFS(db, req.file.buffer, req.file.originalname, signatureMimeType);
+    console.log('[DA Approve] Saving signature attachment to GridFS:', uploadedGridFSId);
     const Attachment = require('../models/Attachment');
     Attachment.setDB(db);
     try {
       signatureAttachment = await Attachment.create({
         category: 'da_signature',
-        storage_key: storageKeyFor(req.file.filename),
+        gridfs_id: uploadedGridFSId,
         mime_type: signatureMimeType,
         original_name: req.file.originalname,
         filing_number: filing.filing_number,
@@ -288,15 +277,16 @@ router.post('/:filingNumber/approve', upload.single('da_signature_file'), async 
     console.log('[DA Approve] Approval complete for filing:', req.params.filingNumber);
     res.json({ success: true, message: 'Filing approved and documents generated' });
   } catch (error) {
+    // Cleanup: remove GridFS file and attachment DB record if upload partially succeeded
     if (signatureAttachment) {
       try {
         await getDatabase().collection('attachments').deleteOne({ _id: signatureAttachment._id });
-        removeStoredFile(req.file?.path);
+        if (uploadedGridFSId) await deleteFileFromGridFS(getDatabase(), uploadedGridFSId);
       } catch (cleanupError) {
         console.error('[DA Approve] Signature cleanup error:', cleanupError);
       }
-    } else if (req.file) {
-      removeStoredFile(req.file.path);
+    } else if (uploadedGridFSId) {
+      await deleteFileFromGridFS(getDatabase(), uploadedGridFSId).catch(() => {});
     }
     console.error('[DA Approve] Filing approval error:', error);
     res.status(error.status || 500).json({ error: error.status ? error.message : 'Failed to approve filing' });

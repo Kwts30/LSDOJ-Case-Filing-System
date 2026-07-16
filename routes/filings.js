@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const crypto = require('crypto');
 const path = require('path');
 const { getDatabase, ObjectId } = require('../utils/db');
 const { logActivity, verifyPassword } = require('../middleware/auth');
@@ -11,16 +10,12 @@ const { FILING_STATUSES, REVISION_REASON_LABELS, ATTACHMENT_TYPES, UPLOAD_LIMITS
 const { getFilingSchema, getFilingTypesForDepartment } = require('../config/filingSchemas');
 const { normalizeFilingInput, validateFilingInput, getUploadCategories } = require('../utils/filingValidation');
 const { getActor, canViewFiling, canEditFiling, canCreateFiling } = require('../utils/accessControl');
-const { ensureEvidenceDirectory, storageKeyFor, resolveAttachmentPath, removeStoredFile } = require('../utils/fileStorage');
+const { resolveAttachmentPath, removeStoredFile, storeFileInGridFS, deleteFileFromGridFS } = require('../utils/fileStorage');
 const { validateUploadedFile, isImageMimeType } = require('../utils/uploadValidation');
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, ensureEvidenceDirectory()),
-  filename: (_req, _file, cb) => cb(null, `${Date.now()}-${crypto.randomBytes(16).toString('hex')}`)
-});
-
+// Use memoryStorage so uploads go to GridFS instead of the local filesystem
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: UPLOAD_LIMITS.maxFileSize, files: 10 },
   fileFilter: (_req, file, cb) => cb(null, UPLOAD_LIMITS.allowedMimeTypes.includes(file.mimetype))
 });
@@ -29,10 +24,10 @@ function getRequestFiles(req) {
   return Array.isArray(req.files) ? req.files : [];
 }
 
-function cleanupUploadedFiles(files) {
-  files.forEach(file => {
-    try { removeStoredFile(file.path); } catch (error) { console.error('Upload cleanup error:', error); }
-  });
+// GridFS cleanup — only called when attachment creation fails after upload.
+// Files in-memory (buffer) need no cleanup; GridFS files are deleted if stored.
+async function cleanupGridFSFiles(db, gridfsIds) {
+  await Promise.all(gridfsIds.map(id => deleteFileFromGridFS(db, id).catch(() => {})));
 }
 
 function getCategories(req, fileCount) {
@@ -67,6 +62,7 @@ async function createAttachments({ db, filing, files, categories, uploadedBy }) 
 
   const mimeTypes = await Promise.all(files.map(file => validateUploadedFile(file, UPLOAD_LIMITS.allowedMimeTypes)));
   const created = [];
+  const storedGridFSIds = [];
 
   try {
     for (let index = 0; index < files.length; index += 1) {
@@ -86,9 +82,13 @@ async function createAttachments({ db, filing, files, categories, uploadedBy }) 
         if (existing) throw new Error(`A ${category.replace('_', ' ')} already exists for this filing`);
       }
 
+      // Store to GridFS (memory buffer → MongoDB)
+      const gridfsId = await storeFileInGridFS(db, file.buffer, file.originalname, mimeType);
+      storedGridFSIds.push(gridfsId);
+
       const attachment = await Attachment.create({
         category,
-        storage_key: storageKeyFor(path.basename(file.filename)),
+        gridfs_id: gridfsId,
         mime_type: mimeType,
         original_name: file.originalname,
         filing_number: filing.filing_number,
@@ -98,6 +98,8 @@ async function createAttachments({ db, filing, files, categories, uploadedBy }) 
     }
     return created;
   } catch (error) {
+    // Rollback: delete GridFS files and DB records
+    await cleanupGridFSFiles(db, storedGridFSIds);
     await Promise.all(created.map(attachment => Attachment.deleteById(attachment._id)));
     throw error;
   }
@@ -196,7 +198,6 @@ router.post('/', upload.array('files', 10), async (req, res) => {
 
     res.status(201).json({ success: true, filing_number: newFiling.filing_number, redirect: `/filings/${newFiling.filing_number}` });
   } catch (error) {
-    cleanupUploadedFiles(files);
     console.error('Filing creation error:', error);
     res.status(400).json({ error: error.message || 'Failed to create filing' });
   }
@@ -285,7 +286,6 @@ router.put('/:filingNumber', upload.array('files', 10), async (req, res) => {
     await logActivity(new ObjectId(actor.id), 'edit', `Updated filing ${filing.filing_number}`, 'filing', filing.filing_number, req);
     res.json({ success: true, message: 'Filing updated', filing_number: filing.filing_number });
   } catch (error) {
-    cleanupUploadedFiles(files);
     console.error('Filing update error:', error);
     res.status(400).json({ error: error.message || 'Failed to update filing' });
   }
@@ -359,9 +359,15 @@ router.delete('/:filingNumber/attachments/:attachmentId', async (req, res) => {
 
     const attachment = await Attachment.findById(req.params.attachmentId);
     if (!attachment || attachment.filing_number !== filing.filing_number) return res.status(404).json({ error: 'Attachment not found' });
-    const filePath = resolveAttachmentPath(attachment);
+
+    // Delete from GridFS if stored there, otherwise fall back to disk
+    if (attachment.gridfs_id) {
+      await deleteFileFromGridFS(db, attachment.gridfs_id);
+    } else {
+      const filePath = resolveAttachmentPath(attachment);
+      removeStoredFile(filePath);
+    }
     await Attachment.deleteById(attachment._id);
-    removeStoredFile(filePath);
 
     await logActivity(new ObjectId(actor.id), 'delete', `Removed attachment from filing ${filing.filing_number}`, 'document', attachment._id.toString(), req);
     res.json({ success: true, message: 'Attachment removed' });

@@ -1,0 +1,57 @@
+<!-- Header Navigation — LSPD / DA Case Filing System (Home Version) -->
+<%
+  let headerClass = 'header--default';
+  if (typeof department !== 'undefined') {
+    if (department === 'LSPD') headerClass = 'header--lspd';
+    else if (department === 'DA') headerClass = 'header--da';
+    else if (department === 'DOJ') headerClass = 'header--doj';
+  } else if (typeof admin_role !== 'undefined' && admin_role !== 'none') {
+    headerClass = 'header--admin';
+  }
+%>
+<header class="header <%= headerClass %> header--home" style="padding: 1rem 2rem; min-height: 80px;">
+  <div class="header-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1600px; margin: 0 auto; flex-wrap: wrap; gap: 1rem;">
+    
+    <!-- Left Logos -->
+    <div class="header-logos-left" style="display: flex; gap: 1rem; align-items: center; flex: 1; min-width: max-content;">
+      <img src="/Assets/lossantos.webp" class="header-logo" alt="Los Santos" style="height: 50px; width: auto;">
+      <img src="/Assets/doj.png" class="header-logo" alt="Department of Justice" style="height: 50px; width: auto;">
+    </div>
+
+    <!-- Center Text -->
+    <div class="header-brand-text" style="text-align: center; flex: 2; min-width: 300px;">
+      <h1 style="font-size: 1.5rem; margin: 0 0 0.25rem 0;">Department of Justice Case Filing System</h1>
+      <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin: 0;">City of Los Santos | San Andreas</p>
+    </div>
+
+    <!-- Right Logos & Actions -->
+    <div class="header-right-section" style="display: flex; gap: 1.5rem; align-items: center; flex: 1; justify-content: flex-end; min-width: max-content;">
+      <div class="header-logos-right" style="display: flex; gap: 1rem; align-items: center;">
+        <img src="/Assets/da.png" class="header-logo" alt="District Attorney" style="height: 50px; width: auto;">
+        <img src="/Assets/LSPD.png" class="header-logo" alt="LSPD" style="height: 50px; width: auto;">
+      </div>
+
+      <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 1rem; margin-left: 1rem; border-left: 1px solid var(--color-border); padding-left: 1rem;">
+          <div class="header-icon-group" style="display: flex; gap: 0.5rem;">
+            <a href="/profile" class="header-icon-btn" title="Profile">
+              <span class="material-icons">account_circle</span>
+            </a>
+            <% if (typeof admin_role !== 'undefined' && (admin_role === 'department_admin' || admin_role === 'super_admin')) { %>
+              <a href="/admin/dashboard" class="header-icon-btn" title="Admin Dashboard">
+                <span class="material-icons">admin_panel_settings</span>
+              </a>
+            <% } %>
+            <form action="/logout" method="POST" class="form-inline" style="margin: 0;">
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+              <button type="submit" class="header-icon-btn" title="Logout">
+                <span class="material-icons">logout</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+  </div>
+</header>

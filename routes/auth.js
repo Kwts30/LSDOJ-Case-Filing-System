@@ -3,10 +3,31 @@
 
 const express = require('express');
 const router = express.Router();
+const { z } = require('zod');
 const { getDatabase, ObjectId } = require('../utils/db');
 const { verifyPassword, hashPassword, logActivity, generateToken } = require('../middleware/auth');
 const { DEPARTMENTS, POSITIONS, ACCOUNT_STATUSES } = require('../config/constants');
 const { validatePasswordPolicy } = require('../utils/passwordPolicy');
+const { authRateLimitMiddleware } = require('../middleware/rateLimit');
+
+const DUMMY_PASSWORD_HASH = '$2a$12$C6UzMDM.H6dfI/f/IKcEe.7vCw0JeS7G2wB.4D4x9fU6v0w9Fe91y';
+const MAX_LOGIN_ATTEMPTS = Number.parseInt(process.env.LOGIN_MAX_ATTEMPTS || '5', 10);
+const LOGIN_LOCK_MS = Number.parseInt(process.env.LOGIN_LOCK_MS || String(15 * 60 * 1000), 10);
+
+const loginSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required')
+});
+
+const signupSchema = z.object({
+  username: z.string().min(1, 'Username is required'),
+  name: z.string().min(1, 'Name is required'),
+  password: z.string().min(1, 'Password is required'),
+  confirm_password: z.string().min(1, 'Confirm password is required'),
+  department: z.string().min(1, 'Department is required'),
+  position: z.string().min(1, 'Position is required'),
+  badge_number: z.string().optional()
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /auth/login — Render login page
@@ -25,17 +46,17 @@ router.get('/login', (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /auth/login — Process login by username
 // ─────────────────────────────────────────────────────────────────────────────
-router.post('/login', async (req, res) => {
+router.post('/login', authRateLimitMiddleware, async (req, res) => {
   try {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
+    const parseResult = loginSchema.safeParse(req.body);
+    if (!parseResult.success) {
       return res.status(400).render('login', {
         title: 'Login - Department of Justice Case Filing System',
         error: 'Username and password are required',
         info: null
       });
     }
+    const { username, password } = parseResult.data;
 
     const db = getDatabase();
 
@@ -43,7 +64,18 @@ router.post('/login', async (req, res) => {
       username: username.trim().toUpperCase()
     });
 
-    if (!user) {
+    // Always run a bcrypt comparison, even for an unknown user. This makes
+    // username enumeration through response time substantially harder.
+    const isPasswordValid = await verifyPassword(password, user?.password_hash || DUMMY_PASSWORD_HASH);
+    if (!user || !isPasswordValid) {
+      if (user) {
+        const attempts = (Number(user.login_attempts) || 0) + 1;
+        const update = { $set: {}, $inc: { login_attempts: 1 }, $currentDate: { updated_at: true } };
+        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+          update.$set.login_locked_until = new Date(Date.now() + LOGIN_LOCK_MS);
+        }
+        await db.collection('users').updateOne({ _id: user._id }, update);
+      }
       return res.status(401).render('login', {
         title: 'Login - Department of Justice Case Filing System',
         error: 'Invalid username or password',
@@ -51,7 +83,16 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Check account status BEFORE verifying password
+    const lockedUntil = user.login_locked_until ? new Date(user.login_locked_until) : null;
+    if (lockedUntil && lockedUntil.getTime() > Date.now()) {
+      return res.status(429).render('login', {
+        title: 'Login - Department of Justice Case Filing System',
+        error: 'Account temporarily locked due to too many failed login attempts. Please try again later.',
+        info: null
+      });
+    }
+
+    // Account status is only disclosed after the password has been verified.
     if (user.account_status === 'pending') {
       return res.status(403).render('login', {
         title: 'Login - Department of Justice Case Filing System',
@@ -69,36 +110,10 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Account lockout after 5 failed attempts
-    if (user.login_attempts >= 5) {
-      return res.status(429).render('login', {
-        title: 'Login - Department of Justice Case Filing System',
-        error: 'Account locked due to too many failed login attempts. Contact an administrator.',
-        info: null
-      });
-    }
-
-    // Verify password
-    const isPasswordValid = await verifyPassword(password, user.password_hash);
-
-    if (!isPasswordValid) {
-      // Increment failed attempts
-      await db.collection('users').updateOne(
-        { _id: user._id },
-        { $inc: { login_attempts: 1 }, $currentDate: { updated_at: true } }
-      );
-
-      return res.status(401).render('login', {
-        title: 'Login - Department of Justice Case Filing System',
-        error: 'Invalid username or password',
-        info: null
-      });
-    }
-
     // Successful login — reset attempts, update last_login
     await db.collection('users').updateOne(
       { _id: user._id },
-      { $set: { last_login: new Date(), login_attempts: 0 }, $currentDate: { updated_at: true } }
+      { $set: { last_login: new Date(), login_attempts: 0, login_locked_until: null }, $currentDate: { updated_at: true } }
     );
 
     // Regenerate session after authentication to prevent session fixation.
@@ -145,15 +160,24 @@ router.get('/signup', (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /auth/signup — Create a new pending account
 // ─────────────────────────────────────────────────────────────────────────────
-router.post('/signup', async (req, res) => {
+router.post('/signup', authRateLimitMiddleware, async (req, res) => {
   try {
-    const { username, name, password, confirm_password, department, position, badge_number } = req.body;
-
-    // Validate all required fields
-    if (!username || !name || !password || !department || !position || (department === 'LSPD' && !badge_number)) {
+    const parseResult = signupSchema.safeParse(req.body);
+    if (!parseResult.success) {
       return res.status(400).render('signup', {
         title: 'Sign Up - Department of Justice Case Filing System',
-        error: 'All fields are required',
+        error: 'All fields are required and must be valid',
+        departments: DEPARTMENTS,
+        positions: POSITIONS
+      });
+    }
+    const { username, name, password, confirm_password, department, position, badge_number } = parseResult.data;
+
+    // Validate specific requirement for LSPD
+    if (department === 'LSPD' && !badge_number) {
+      return res.status(400).render('signup', {
+        title: 'Sign Up - Department of Justice Case Filing System',
+        error: 'Badge number is required for LSPD',
         departments: DEPARTMENTS,
         positions: POSITIONS
       });
@@ -234,6 +258,7 @@ router.post('/signup', async (req, res) => {
       email: null,
       last_login: null,
       login_attempts: 0,
+      login_locked_until: null,
       created_at: new Date(),
       updated_at: new Date()
     };
@@ -243,8 +268,8 @@ router.post('/signup', async (req, res) => {
     // Log signup
     await logActivity(result.insertedId, 'signup', `${username} signed up (${department} - ${position})`, 'account', result.insertedId.toString(), req);
 
-    // Redirect to login with info message
-    res.redirect('/auth/login?info=Your account has been submitted for verification. An administrator will review your application.');
+    // Redirect to login with success message
+    res.redirect('/login?info=Your account has been submitted for verification. An administrator will review your application.');
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).render('signup', {
@@ -266,20 +291,20 @@ router.post('/logout', (req, res) => {
     logActivity(userId, 'logout', `${username} logged out`, 'account', userId.toString(), req);
 
     req.session.destroy((err) => {
-      if (err) console.error('Session destroy error:', err);
-      res.redirect('/auth/login');
+      res.clearCookie(process.env.SESSION_COOKIE_NAME || 'filing.sid');
+      res.redirect('/login');
     });
   } else {
-    res.redirect('/auth/login');
+    res.redirect('/login');
   }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /auth/profile — View user profile
 // ─────────────────────────────────────────────────────────────────────────────
-router.get('/profile', (req, res) => {
+router.get('/profile', async (req, res) => {
   if (!req.session || !req.session.userId) {
-    return res.redirect('/auth/login');
+    return res.redirect('/login');
   }
 
   res.render('profile', {
@@ -344,7 +369,7 @@ router.post('/profile/update', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /auth/change-password — Change own password
 // ─────────────────────────────────────────────────────────────────────────────
-router.post('/change-password', async (req, res) => {
+router.post('/change-password', authRateLimitMiddleware, async (req, res) => {
   try {
     if (!req.session || !req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -398,7 +423,7 @@ router.post('/change-password', async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /auth/verify-password — Re-verify password for e-signature
 // ─────────────────────────────────────────────────────────────────────────────
-router.post('/verify-password', async (req, res) => {
+router.post('/verify-password', authRateLimitMiddleware, async (req, res) => {
   try {
     if (!req.session || !req.session.userId) {
       return res.status(401).json({ error: 'Not authenticated' });

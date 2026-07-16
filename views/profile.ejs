@@ -93,7 +93,7 @@
     if (!name) { alert('Name is required'); return; }
 
     try {
-      const res = await fetch('/auth/profile/update', {
+      const res = await fetch('/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email })
@@ -123,7 +123,7 @@
     }
 
     try {
-      const res = await fetch('/auth/change-password', {
+      const res = await fetch('/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ current_password, new_password, confirm_password })

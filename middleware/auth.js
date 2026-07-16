@@ -33,7 +33,7 @@ async function authenticateUser(req, res, next) {
             message: 'Your account is not active. Please contact an administrator.'
           });
         }
-        return res.redirect('/auth/login?info=Your account is not active. Please contact an administrator.');
+        return res.redirect('/login?info=Your account is not active. Please contact an administrator.');
       }
 
       req.session.username = user.username;
@@ -71,12 +71,12 @@ async function authenticateUser(req, res, next) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Please login first' });
     }
 
-    return res.redirect('/auth/login');
+    return res.redirect('/login');
   } catch (error) {
     if (req.path.startsWith('/api')) {
-      return res.status(401).json({ error: 'Invalid token', message: error.message });
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication failed' });
     }
-    return res.redirect('/auth/login');
+    return res.redirect('/login');
   }
 }
 

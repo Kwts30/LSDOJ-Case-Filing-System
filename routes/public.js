@@ -17,4 +17,18 @@ router.get('/', (req, res, next) => {
   });
 });
 
+// GET /privacy - Render privacy policy page
+router.get('/privacy', (req, res) => {
+  res.render('privacy', {
+    title: 'Privacy Policy'
+  });
+});
+
+// GET /terms - Render terms of service page
+router.get('/terms', (req, res) => {
+  res.render('terms', {
+    title: 'Terms of Service'
+  });
+});
+
 module.exports = router;

@@ -31,6 +31,7 @@ async function initializeAdmin() {
         verified_by: null,
         rejection_reason: null,
         email: process.env.ADMIN_EMAIL || null,
+        login_locked_until: null,
         last_login: null,
         login_attempts: 0,
         created_at: new Date(),

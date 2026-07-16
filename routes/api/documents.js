@@ -7,10 +7,15 @@ const GeneratedDocument = require('../../models/GeneratedDocument');
 const { getActor, canViewFiling, canReviewFiling } = require('../../utils/accessControl');
 const { logActivity } = require('../../middleware/auth');
 const { generateDocumentForFiling } = require('../../utils/docGenEngine');
+const { validateUploadedFile, isImageMimeType } = require('../../utils/uploadValidation');
 
 GeneratedDocument.setDB(getDatabase());
 
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024, files: 5, parts: 20 },
+  fileFilter: (_req, file, cb) => cb(null, ['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype))
+});
 
 async function loadAuthorizedDocument(req, res) {
   let docId;
@@ -32,6 +37,8 @@ async function loadAuthorizedDocument(req, res) {
     res.status(403).json({ error: 'You do not have access to this document' });
     return null;
   }
+  res.set('Cache-Control', 'private, no-store, max-age=0');
+  res.set('Cross-Origin-Resource-Policy', 'same-origin');
   return { db, doc, filing };
 }
 
@@ -47,6 +54,10 @@ router.post('/generate-manual', upload.array('evidence_images', 10), async (req,
     // Only DA/DOJ or super_admin can generate letters/warrants
     if (actor.department !== 'DA' && actor.department !== 'DOJ' && actor.adminRole !== 'super_admin') {
       return res.status(403).json({ error: 'Manual document generation is restricted to DA users' });
+    }
+    if (req.files?.length) {
+      const mimeTypes = await Promise.all(req.files.map(file => validateUploadedFile(file, ['image/jpeg', 'image/png', 'image/webp'])));
+      if (!mimeTypes.every(isImageMimeType)) return res.status(400).json({ error: 'Evidence uploads must be valid images' });
     }
     const PizZip = require('pizzip');
     const Docxtemplater = require('docxtemplater');

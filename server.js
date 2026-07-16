@@ -10,8 +10,9 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const path = require('path');
+const mongoSanitize = require('express-mongo-sanitize');
 
-const { helmetConfig, errorHandler } = require('./middleware/security');
+const { helmetConfig, requestSizeLimit, errorHandler } = require('./middleware/security');
 const { initializeDatabase } = require('./utils/db');
 const { createSessionStore } = require('./utils/mongoSessionStore');
 const { csrfProtection } = require('./middleware/csrf');
@@ -20,8 +21,6 @@ const { sessionSecret, validateProductionConfiguration } = require('./config/run
 const { initializeAdmin } = require('./utils/initAdmin');
 const { authenticateUser, requireRole, requireDepartment, requireAdminRole, setUserContext } = require('./middleware/auth');
 const { ADMIN_ROLES } = require('./config/constants');
-const cron = require('node-cron');
-const { generateCaseDigest, generateAccountDigest } = require('./utils/discordDigest');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,9 +47,17 @@ async function startServer() {
   // ===== Middleware Setup =====
 
   // Security headers
+  app.disable('x-powered-by');
   app.use(helmetConfig);
 
-  if (process.env.TRUST_PROXY) {
+  // Data sanitization against NoSQL query injection
+  app.use(mongoSanitize());
+
+  // Vercel terminates TLS and supplies the real client IP through its trusted
+  // proxy. Without this, IP-based rate limits would apply to Vercel itself.
+  if (process.env.VERCEL === '1') {
+    app.set('trust proxy', 1);
+  } else if (process.env.TRUST_PROXY) {
     app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : process.env.TRUST_PROXY);
   }
 
@@ -65,6 +72,7 @@ async function startServer() {
   app.use('/Assets', express.static(path.join(__dirname, 'public', 'Assets')));
 
   // Body parsers
+  app.use(requestSizeLimit);
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ limit: '10mb', extended: true }));
   app.use(cookieParser());
@@ -97,7 +105,7 @@ async function startServer() {
   // ===== Routes =====
 
   // Public routes (no authentication)
-  app.use('/auth', require('./routes/auth'));
+  app.use('/', require('./routes/auth'));
   app.use('/health', require('./routes/health'));
 
   // Protected files are served only after filing-level authorization.
@@ -130,13 +138,6 @@ async function startServer() {
     require('./routes/users')
   );
 
-  // Protected: Manual discord digest routes (super admin only)
-  app.use('/api/digest',
-    authenticateUser,
-    requireAdminRole(ADMIN_ROLES.SUPER_ADMIN),
-    require('./routes/digest')
-  );
-
   // 404 handler
   app.use((req, res) => {
     res.status(404).render('error', { message: 'Page not found' });
@@ -146,26 +147,14 @@ async function startServer() {
   app.use(errorHandler);
 
   // ===== Start Server =====
-  app.listen(PORT, () => {
-    console.log(`\n  Department of Justice Case Filing System v3.0.0`);
-    console.log(`  Server running on port ${PORT}`);
-    console.log(`  http://localhost:${PORT}\n`);
-  });
-
-  // ===== Scheduled Jobs =====
-  const cronOptions = process.env.CRON_TIMEZONE ? { timezone: process.env.CRON_TIMEZONE } : undefined;
-
-  // Case Digest: Run every day at 18:00 (6 PM)
-  cron.schedule('0 18 * * *', () => {
-    console.log('Running scheduled Case Digest...');
-    generateCaseDigest();
-  }, cronOptions);
-
-  // Account Digest: Run every hour during the day (8 AM - 8 PM)
-  cron.schedule('0 8-20 * * *', () => {
-    console.log('Running scheduled Account Digest...');
-    generateAccountDigest();
-  }, cronOptions);
+  // On Vercel, we export the app — listen() is only called in direct Node execution.
+  if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+      console.log(`\n  Department of Justice Case Filing System v3.0.0`);
+      console.log(`  Server running on port ${PORT}`);
+      console.log(`  http://localhost:${PORT}\n`);
+    });
+  }
 }
 
 // Graceful shutdown

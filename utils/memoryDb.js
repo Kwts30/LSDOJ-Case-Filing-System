@@ -11,6 +11,7 @@ let collections = {
   activity_logs: [],
   generated_documents: [],
   rate_limit: [],
+  rate_limit_windows: [],
   filing_sequences: [],
   app_sessions: []
 };
@@ -85,7 +86,7 @@ const MemoryDB = {
           Object.entries(update.$inc || {}).forEach(([field, value]) => { next[field] = (Number(next[field]) || 0) + value; });
           collections[name][index] = next;
         } else if (options.upsert) {
-          next = { ...query, ...(update.$set || {}), created_at: new Date() };
+          next = { ...query, ...(update.$setOnInsert || {}), ...(update.$set || {}), created_at: new Date() };
           Object.entries(update.$inc || {}).forEach(([field, value]) => { next[field] = (Number(next[field]) || 0) + value; });
           collections[name].push(next);
         } else {

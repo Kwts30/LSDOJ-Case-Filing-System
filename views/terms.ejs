@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <style>
+        .privacy-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #fff;
+            padding: 4rem 2rem 5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .privacy-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .privacy-content {
+            max-width: 800px;
+            margin: -3rem auto 4rem;
+            background: var(--color-bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 3rem;
+            position: relative;
+            z-index: 10;
+        }
+        .privacy-section {
+            margin-bottom: 2.5rem;
+        }
+        .privacy-section h2 {
+            font-size: 1.25rem;
+            color: var(--color-text-primary);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .privacy-section p, .privacy-section li {
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        .privacy-section ul {
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .privacy-section li {
+            margin-bottom: 0.5rem;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #fff;
+        }
+        
+        @media (max-width: 768px) {
+            .privacy-content {
+                padding: 1.5rem;
+                margin: -2rem 1rem 3rem;
+            }
+            .privacy-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="theme-dark">
+
+    <div class="privacy-header">
+        <a href="/signup" class="back-link"><span class="material-icons">arrow_back</span> Go Back</a>
+        <h1 class="privacy-title">Terms of Service</h1>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Effective Date: <span id="effective-date"></span></p>
+    </div>
+
+    <main class="container">
+        <div class="privacy-content">
+            
+            <p class="mb-xl text-secondary" style="font-size: 1.05rem; line-height: 1.6;">
+                Welcome to the Los Santos Department of Justice (LSDOJ) Case Filing System. This platform is a hobby project developed by KWTS for use within the Mobtown FiveM roleplay community.
+            </p>
+            <p class="mb-xl text-secondary" style="font-size: 1.05rem; line-height: 1.6;">
+                By accessing, browsing, or registering for an account on this website, you agree to comply with and be bound by the following Terms of Service. If you do not agree with these terms, you must not use this system.
+            </p>
+
+            <div class="privacy-section mt-4">
+                <h2>1. Nature of the Service & Disclaimer</h2>
+                <p>You acknowledge and agree that this website is strictly for roleplay purposes.</p>
+                <p>This system is entirely fictional and is not affiliated with, endorsed by, or connected to the real-world United States Department of Justice (DOJ), any law enforcement agency, or any government entity.</p>
+                <p>You agree not to use this system to impersonate real-world government officials, agencies, or law enforcement outside the context of the FiveM roleplay environment.</p>
+                <p>Any documents, names, or scenarios created within this system are fictional. Do not upload or enter real-world sensitive, personal, or confidential information into this system.</p>
+            </div>
+
+            <div class="privacy-section">
+                <h2>2. User Accounts and Access</h2>
+                <p>To use the case filing features of this website, you must request and be approved for an account.</p>
+                <ul>
+                    <li><strong>Account Security:</strong> You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.</li>
+                    <li><strong>Accurate Information:</strong> You agree to provide accurate roleplay and community identification information (e.g., Discord ID, character name) when requesting an account.</li>
+                    <li><strong>Revocation of Access:</strong> Access to this system is a privilege, not a right. KWTS and the community administrators reserve the right to suspend, restrict, or terminate your access to the system at any time, without notice, for any reason—including but not limited to violation of community rules or these Terms of Service.</li>
+                </ul>
+            </div>
+
+            <div class="privacy-section">
+                <h2>3. Acceptable Use</h2>
+                <p>When using the LSDOJ Case Filing System, you agree to use it as intended for roleplay administration. You agree NOT to:</p>
+                <ul>
+                    <li>Attempt to hack, exploit, or disrupt the website, its servers, or its security features.</li>
+                    <li>Use the system for any illegal, real-world activities, or harassment of other community members.</li>
+                    <li>Automate requests or spam the server (e.g., using bots or scrapers) in a way that impacts performance.</li>
+                    <li>Upload malicious code, viruses, or inappropriate content that violates the community's overarching roleplay rules.</li>
+                </ul>
+            </div>
+
+            <div class="privacy-section">
+                <h2>4. Privacy and Data Collection</h2>
+                <p>Your use of this system is also governed by our Privacy Policy. By using the system, you consent to the collection of basic usage data (IP address, browser type) and the information you provide during account registration, as outlined in the Privacy Policy.</p>
+            </div>
+
+            <div class="privacy-section">
+                <h2>5. Limitation of Liability and "As-Is" Provision</h2>
+                <p>This website was developed by KWTS as a personal hobby project and is provided on an "as-is" and "as-available" basis.</p>
+                <p>We make no warranties, express or implied, regarding the uptime, reliability, or accuracy of the system.</p>
+                <p>KWTS and the community administrators will not be held liable for any data loss, system downtime, or issues arising from the use of (or inability to use) this website.</p>
+            </div>
+
+            <div class="privacy-section">
+                <h2>6. Changes to the Terms of Service</h2>
+                <p>We reserve the right to modify these Terms of Service at any time. Any changes will be posted on this page with an updated "Effective Date." Your continued use of the website after any changes indicates your acceptance of the new terms.</p>
+            </div>
+
+            <div class="privacy-section">
+                <h2>7. Contact Information</h2>
+                <p>If you have any questions regarding these Terms of Service, please contact the administrative team or the developer (KWTS) via our community Discord server.</p>
+            </div>
+
+        </div>
+    </main>
+
+    <%- include('partials/footer_full') %>
+
+    <script src="/js/theme.js"></script>
+    <%- include('partials/cookie-banner') %>
+    <script>
+        document.getElementById('effective-date').textContent = new Date().toLocaleDateString();
+    </script>
+</body>
+</html>

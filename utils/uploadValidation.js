@@ -23,9 +23,27 @@ function detectMimeFromBytes(buffer) {
   return null;
 }
 
+/**
+ * Validate an uploaded file by inspecting its magic bytes.
+ * Works with both disk storage (file.path) and memory storage (file.buffer).
+ *
+ * @param {Express.Multer.File} file
+ * @param {string[]} allowedMimeTypes
+ * @returns {Promise<string>} - The detected MIME type
+ */
 async function validateUploadedFile(file, allowedMimeTypes) {
-  const bytes = await fs.readFile(file.path);
-  const detectedMime = detectMimeFromBytes(bytes.subarray(0, 16));
+  // Support both memory storage (buffer) and disk storage (path)
+  let bytes;
+  if (file.buffer) {
+    bytes = file.buffer;
+  } else if (file.path) {
+    bytes = await fs.readFile(file.path);
+  } else {
+    throw new Error(`Cannot validate file: no buffer or path for ${file.originalname}`);
+  }
+
+  const header = bytes.subarray(0, 16);
+  const detectedMime = detectMimeFromBytes(header);
   const isPlainText = file.mimetype === 'text/plain' && !detectedMime && isPlainTextBuffer(bytes);
   const actualMime = detectedMime || (isPlainText ? 'text/plain' : null);
 

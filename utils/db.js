@@ -23,6 +23,8 @@ async function initializeDatabase(mongoUri) {
     await client.connect();
     await client.db('admin').command({ ping: 1 });
     db = client.db('doj-case-filing');
+    // Expose client on db so connect-mongo can reuse the connection
+    db.client = client;
     console.log('Connected to MongoDB Atlas');
 
     // Get existing collection names
@@ -144,12 +146,12 @@ async function initializeDatabase(mongoUri) {
     await ensureIndex(db, 'sessions', { token: 1 }, { unique: true });
     await ensureIndex(db, 'sessions', { expires_at: 1 }, { expireAfterSeconds: 0 });
 
-    // ───── RATE LIMIT ─────
-    if (!collectionNames.includes('rate_limit')) {
-      await db.createCollection('rate_limit');
+    // Counter documents are one per IP/window, not one per request. Retain the
+    // old collection for a safe, non-destructive deployment migration.
+    if (!collectionNames.includes('rate_limit_windows')) {
+      await db.createCollection('rate_limit_windows');
     }
-    await ensureIndex(db, 'rate_limit', { identifier: 1 });
-    await ensureIndex(db, 'rate_limit', { created_at: 1 }, { expireAfterSeconds: 3600 });
+    await ensureIndex(db, 'rate_limit_windows', { expires_at: 1 }, { expireAfterSeconds: 0 });
 
     console.log('Database collections and indexes initialized');
     return db;
@@ -169,7 +171,7 @@ async function initializeDatabase(mongoUri) {
     const memoryCollections = [
       'users', 'filings', 'filing_sequences', 'attachments', 'prosecution_records',
       'generated_documents', 'timeline_entries', 'audit_logs', 'app_sessions',
-      'departments', 'charges', 'sessions', 'rate_limit'
+      'departments', 'charges', 'sessions', 'rate_limit', 'rate_limit_windows'
     ];
 
     for (const col of memoryCollections) {
@@ -222,9 +224,17 @@ async function closeDatabase() {
   }
 }
 
+/**
+ * Get the raw MongoClient instance
+ */
+function getClient() {
+  return client;
+}
+
 module.exports = {
   initializeDatabase,
   getDatabase,
+  getClient,
   closeDatabase,
   ObjectId
 };

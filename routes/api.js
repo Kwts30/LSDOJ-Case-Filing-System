@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const { getDatabase } = require('../utils/db');
 const { DEPARTMENTS, POSITIONS, FILING_STATUSES, CHARGE_CATEGORIES } = require('../config/constants');
+const { getActor, isSuperAdmin } = require('../utils/accessControl');
 
 // GET /api/status — System status
 router.get('/status', (req, res) => {
@@ -51,6 +52,10 @@ router.get('/positions/:department', (req, res) => {
 // GET /api/filing-stats — Filing statistics (for dashboard widgets)
 router.get('/filing-stats', async (req, res) => {
   try {
+    const actor = getActor(req);
+    if (actor.department !== 'DA' && !isSuperAdmin(actor)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     const db = getDatabase();
     const stats = await db.collection('filings').aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } },

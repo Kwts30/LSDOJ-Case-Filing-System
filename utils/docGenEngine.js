@@ -99,6 +99,13 @@ async function generateDocumentForFiling(filing, submitter, reviewer, existingDo
     });
     
     doc.render(data);
+    let renderedXml = doc.getZip().file('word/document.xml').asText();
+    renderedXml = renderedXml.replace(
+      /<wp:inline([^>]*?)><wp:extent cx="1428750" cy="571500"\/><wp:effectExtent([^>]*?)\/><wp:docPr([^>]*?)\/>([\s\S]*?)<\/wp:inline>/g,
+      '<wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251658240" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1"><wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV><wp:extent cx="1428750" cy="571500"/><wp:effectExtent$2/><wp:wrapNone/><wp:docPr$3/>$4</wp:anchor>'
+    );
+    doc.getZip().file('word/document.xml', renderedXml);
+    
     const buf = doc.getZip().generate({ type: 'nodebuffer' });
 
     const docxBase64 = buf.toString('base64');
@@ -110,23 +117,12 @@ async function generateDocumentForFiling(filing, submitter, reviewer, existingDo
       console.error('Document image rendering skipped:', renderError.message);
     }
 
-    // Save PDF to local disk if rendered
-    let pdfStorageKey = null;
-    if (rendered.rendered && rendered.pdfBase64) {
-      const { ensureEvidenceDirectory, storageKeyFor } = require('./fileStorage');
-      ensureEvidenceDirectory();
-      const fileName = `generated_pdf_${Date.now()}_${require('crypto').randomBytes(8).toString('hex')}.pdf`;
-      const filePath = path.join(ensureEvidenceDirectory(), fileName);
-      fs.writeFileSync(filePath, Buffer.from(rendered.pdfBase64, 'base64'));
-      pdfStorageKey = storageKeyFor(fileName);
-    }
-
-    // 5. Save to DB
+    // 5. Save to DB — PDF is stored as base64 in MongoDB (no disk write)
     let genDoc;
     if (existingDocId) {
       await GeneratedDocument.updateDocument(existingDocId, {
         docx_base64: docxBase64,
-        pdf_storage_key: pdfStorageKey,
+        pdf_base64: rendered.pdfBase64,
         pages: rendered.pages,
         page_count: rendered.pages.length,
         conversion_status: rendered.rendered ? 'completed' : 'unavailable',
@@ -137,7 +133,7 @@ async function generateDocumentForFiling(filing, submitter, reviewer, existingDo
       genDoc = await GeneratedDocument.create({
         filing_number: filing.filing_number,
         docx_base64: docxBase64,
-        pdf_storage_key: pdfStorageKey,
+        pdf_base64: rendered.pdfBase64,
         pages: rendered.pages,
         page_count: rendered.pages.length,
         conversion_status: rendered.rendered ? 'completed' : 'unavailable',
@@ -153,35 +149,37 @@ async function generateDocumentForFiling(filing, submitter, reviewer, existingDo
 }
 
 async function getAttachmentBase64(att) {
-  if (!att) return 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-  if (!att.file_url) {
-    return 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-  }
+  const BLANK_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  if (!att) return BLANK_PNG;
+
   try {
+    // New path: file is stored in GridFS
+    if (att.gridfs_id) {
+      const { getDatabase } = require('./db');
+      const { GridFSBucket, ObjectId } = require('mongodb');
+      const db = getDatabase();
+      const bucket = new GridFSBucket(db, { bucketName: 'attachments' });
+      const chunks = [];
+      await new Promise((resolve, reject) => {
+        const stream = bucket.openDownloadStream(new ObjectId(att.gridfs_id));
+        stream.on('data', chunk => chunks.push(chunk));
+        stream.on('end', resolve);
+        stream.on('error', reject);
+      });
+      const buffer = Buffer.concat(chunks);
+      // Returns raw buffer (no resolution limit)
+      return buffer.toString('base64');
+    }
+
+    // Legacy path: file is on local disk
+    if (!att.file_url) return BLANK_PNG;
     const absPath = resolveAttachmentPath(att);
-    if (!absPath || !fs.existsSync(absPath)) {
-      return 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-    }
-    
-    // Optimize image before injecting into DOCX to prevent huge files hanging the renderer
-    const ext = path.extname(absPath).toLowerCase();
-    if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
-      const { createCanvas, loadImage } = require('@napi-rs/canvas');
-      const img = await loadImage(absPath);
-      const MAX_WIDTH = 800;
-      if (img.width > MAX_WIDTH) {
-        const scale = MAX_WIDTH / img.width;
-        const canvas = createCanvas(MAX_WIDTH, img.height * scale);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        return canvas.toBuffer('image/jpeg', 0.8).toString('base64');
-      }
-    }
-    
+    if (!absPath || !fs.existsSync(absPath)) return BLANK_PNG;
+
     return fs.readFileSync(absPath, 'base64');
   } catch (error) {
     console.error('Failed to read attachment:', error);
-    return 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    return BLANK_PNG;
   }
 }
 

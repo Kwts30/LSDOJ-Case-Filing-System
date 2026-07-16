@@ -9,26 +9,16 @@ const { getActor } = require('../utils/accessControl');
 
 // Root: redirect based on role
 router.get('/', (req, res) => {
-  const adminRole = req.session?.admin_role;
-
-  // Admin users go to admin dashboard
-  if (adminRole === ADMIN_ROLES.DEPARTMENT_ADMIN || adminRole === ADMIN_ROLES.SUPER_ADMIN) {
-    return res.redirect('/admin/dashboard');
-  }
-
-  // Standard users go to personal dashboard
+  // All users go to the personal/department dashboard
   return res.redirect('/dashboard');
 });
 
-// GET /dashboard
+// GET /dashboard — Filing / review dashboard (available to ALL authenticated users)
+// This is the department-level view: LSPD officers see their filings,
+// DA reviewers see their review workload. Admin users also have access to
+// /admin/dashboard separately for administration tasks.
 router.get('/dashboard', async (req, res) => {
   try {
-    const adminRole = req.session?.admin_role;
-    // Redirect admins if they accidentally land here
-    if (adminRole === ADMIN_ROLES.DEPARTMENT_ADMIN || adminRole === ADMIN_ROLES.SUPER_ADMIN) {
-      return res.redirect('/admin/dashboard');
-    }
-
     const db = getDatabase();
     const actor = getActor(req);
 

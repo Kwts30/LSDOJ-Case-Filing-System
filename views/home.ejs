@@ -162,16 +162,16 @@
 </head>
 <body class="theme-dark">
     
-    <%- include('partials/header') %>
+    <%- include('partials/header_home') %>
 
     <main class="hero-section">
         <div class="hero-bg"></div>
         
         <div class="hero-content">
-            <div class="hero-logo-container">
+            <!-- <div class="hero-logo-container">
                 <img src="/Assets/lossantos.webp" alt="Los Santos" class="hero-logo">
                 <img src="/Assets/doj.png" alt="DOJ" class="hero-logo">
-            </div>
+            </div> -->
 
             <h1 class="hero-title">Department of Justice Case Filing System</h1>
             <p class="hero-subtitle">
@@ -179,7 +179,7 @@
             </p>
 
             <div class="hero-actions">
-                <a href="/auth/login" class="hero-btn hero-btn-primary">
+                <a href="/login" class="hero-btn hero-btn-primary">
                     <span class="material-icons">login</span>
                     Log In
                 </a>
@@ -189,5 +189,7 @@
 
     <!-- Essential Scripts -->
     <script src="/js/theme.js"></script>
+<%- include('partials/footer_full') %>
+<%- include('partials/cookie-banner') %>
 </body>
 </html>

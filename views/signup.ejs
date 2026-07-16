@@ -7,111 +7,380 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="/css/variables.css">
   <link rel="stylesheet" href="/css/global.css">
-  <link rel="stylesheet" href="/css/style.css?v=3">
+  <link rel="stylesheet" href="/css/style.css?v=4">
   <script src="/js/theme.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    /* Minimalist Landscape Auth Layout */
+    .auth-page {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      background: var(--color-bg-primary);
+    }
+    
+    .auth-split {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Left Branding Side */
+    .auth-left {
+      flex: 1.2;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    /* Abstract background shapes */
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      top: -10%; left: -10%;
+      width: 50vw; height: 50vw;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+      border-radius: 50%;
+    }
+    .auth-left::after {
+      content: '';
+      position: absolute;
+      bottom: -20%; right: -10%;
+      width: 40vw; height: 40vw;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, transparent 60%);
+      border-radius: 50%;
+    }
+
+    .brand-content {
+      z-index: 10;
+      text-align: center;
+      max-width: 500px;
+    }
+
+    .brand-logo {
+      width: 140px;
+      height: auto;
+      margin-bottom: 2rem;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+    }
+
+    .brand-title {
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin: 0 0 1rem;
+      letter-spacing: -0.03em;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 1.15rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* Right Form Side */
+    .auth-right {
+      flex: 1.4;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      background: var(--color-bg-primary);
+      padding: 3rem 4rem;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .auth-panel {
+      width: 100%;
+      max-width: 560px;
+      margin: auto 0;
+      animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .panel-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-header p {
+      color: var(--color-text-secondary);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    /* Minimalist Inputs */
+    .form-group label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-wrapper {
+      background: var(--color-bg-secondary);
+      border: 1px solid transparent;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      padding: 0.25rem;
+    }
+
+    .input-wrapper:focus-within {
+      background: var(--color-bg-primary);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .input-icon {
+      color: var(--color-text-tertiary);
+    }
+    .input-wrapper:focus-within .input-icon {
+      color: var(--color-primary);
+    }
+    
+    .input-wrapper input,
+    .input-wrapper select {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .input-wrapper input:focus,
+    .input-wrapper select:focus {
+      box-shadow: none !important;
+    }
+    .input-wrapper select option {
+      background: var(--color-bg-secondary);
+      color: var(--color-text-primary);
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .form-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .btn-login {
+      margin-top: 1rem;
+      padding: 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+    }
+
+    .auth-footer-clean {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+
+    .auth-footer-clean a {
+      color: var(--color-primary);
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 0.25rem;
+      transition: color 0.2s;
+    }
+    .auth-footer-clean a:hover {
+      color: var(--color-primary-hover);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .auth-split {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+      }
+      .auth-left {
+        flex: 0 0 auto;
+        padding: 3rem 2rem;
+      }
+      .brand-title {
+        font-size: 2rem;
+      }
+      .brand-logo {
+        width: 80px;
+        margin-bottom: 1rem;
+      }
+      .auth-right {
+        padding: 2rem;
+      }
+    }
+    
+    @media (max-width: 600px) {
+      .form-row {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+    }
+  </style>
 </head>
 <body class="auth-page">
-  <div class="auth-container">
-    <div class="auth-card auth-card--wide">
-      <div class="auth-header">
-        <img src="/Assets/doj.png" alt="DA Seal" class="auth-logo">
-        <h1>Request Account</h1>
-        <p class="auth-subtitle">Your account will require administrator verification before access is granted</p>
-      </div>
-
-      <% if (error) { %>
-        <div class="alert alert-error">
-          <span class="material-icons">error</span>
-          <span><%= error %></span>
-        </div>
-      <% } %>
-
-      <form method="POST" action="/auth/signup" class="auth-form" id="signup-form">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="username">Username</label>
-            <div class="input-wrapper">
-              <span class="material-icons input-icon">person</span>
-              <input type="text" id="username" name="username" placeholder="e.g. JDOE or LSPD-042" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <div class="input-wrapper">
-              <span class="material-icons input-icon">person</span>
-              <input type="text" id="name" name="name" placeholder="Your full name" required>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="department">Department</label>
-            <div class="input-wrapper">
-              <span class="material-icons input-icon">business</span>
-              <select id="department" name="department" required>
-                <option value="">Select department</option>
-                <% departments.forEach(dept => { %>
-                  <option value="<%= dept %>"><%= dept %></option>
-                <% }); %>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="position">Position / Rank</label>
-            <div class="input-wrapper">
-              <span class="material-icons input-icon">military_tech</span>
-              <select id="position" name="position" required>
-                <option value="">Select department first</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row" id="badge-row" style="display: none;">
-          <div class="form-group" style="width: 100%;">
-            <label for="badge_number">Badge Number</label>
-            <div class="input-wrapper">
-              <span class="material-icons input-icon">badge</span>
-              <input type="text" id="badge_number" name="badge_number" placeholder="e.g. 1234 or A-42">
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="password">Password</label>
-            <div class="input-wrapper">
-              <span class="material-icons input-icon">lock</span>
-              <input type="password" id="password" name="password" placeholder="Minimum <%= passwordMinimumLength %> characters" required minlength="<%= passwordMinimumLength %>">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="confirm_password">Confirm Password</label>
-            <div class="input-wrapper">
-              <span class="material-icons input-icon">lock</span>
-              <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required minlength="<%= passwordMinimumLength %>">
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-full" id="signup-btn">
-          <span class="material-icons">person_add</span>
-          Submit for Verification
-        </button>
-      </form>
-
-      <div class="auth-footer">
-        <p>Already have an account? <a href="/auth/login" class="auth-link">Sign in</a></p>
+  <div class="auth-split">
+    
+    <!-- Left Branding Section -->
+    <div class="auth-left">
+      <div class="brand-content">
+        <img src="/Assets/doj.png" alt="Department of Justice Seal" class="brand-logo">
+        <h1 class="brand-title">Department of Justice Case Filing System</h1>
+        <p class="brand-subtitle">Secure access to the Department of Justice case management and filing system.</p>
       </div>
     </div>
+
+    <!-- Right Signup Section -->
+    <div class="auth-right">
+      <div class="auth-panel">
+        <div class="panel-header">
+          <h2>Request Account</h2>
+          <p>Your account will require administrator verification before access is granted.</p>
+        </div>
+
+        <% if (error) { %>
+          <div class="alert alert-error" style="border-radius: 12px; margin-bottom: 1.5rem;">
+            <span class="material-icons">error</span>
+            <span><%= error %></span>
+          </div>
+        <% } %>
+
+        <form method="POST" action="/signup" class="auth-form" id="signup-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <div class="input-wrapper">
+                <span class="material-icons input-icon">person_outline</span>
+                <input type="text" id="username" name="username" placeholder="e.g. JDOE" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <div class="input-wrapper">
+                <span class="material-icons input-icon">badge</span>
+                <input type="text" id="name" name="name" placeholder="John Doe" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="department">Department</label>
+              <div class="input-wrapper">
+                <span class="material-icons input-icon">business</span>
+                <select id="department" name="department" required>
+                  <option value="">Select department</option>
+                  <% departments.forEach(dept => { %>
+                    <option value="<%= dept %>"><%= dept %></option>
+                  <% }); %>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="position">Position / Rank</label>
+              <div class="input-wrapper">
+                <span class="material-icons input-icon">military_tech</span>
+                <select id="position" name="position" required>
+                  <option value="">Select department first</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row" id="badge-row" style="display: none;">
+            <div class="form-group" style="width: 100%;">
+              <label for="badge_number">Badge Number</label>
+              <div class="input-wrapper">
+                <span class="material-icons input-icon">tag</span>
+                <input type="text" id="badge_number" name="badge_number" placeholder="e.g. 1234 or A-42">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="password">Password</label>
+              <div class="input-wrapper">
+                <span class="material-icons input-icon">lock_outline</span>
+                <input type="password" id="password" name="password" placeholder="Min <%= passwordMinimumLength %> chars" required minlength="<%= passwordMinimumLength %>">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirm_password">Confirm Password</label>
+              <div class="input-wrapper">
+                <span class="material-icons input-icon">lock_outline</span>
+                <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" required minlength="<%= passwordMinimumLength %>">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="width: 100%;">
+              <label class="d-flex align-items-center" style="cursor: pointer; text-transform: none; font-weight: 500; font-size: 0.9rem;">
+                <input type="checkbox" id="tos_accepted" name="tos_accepted" required style="margin-right: 10px; width: 18px; height: 18px;">
+                I agree to the <a href="/terms" style="color: var(--color-primary); text-decoration: none; margin-left: 4px;">Terms of Service</a>.
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-login" id="signup-btn">
+            Submit for Verification
+            <span class="material-icons" style="margin-left: 8px; font-size: 1.1rem;">how_to_reg</span>
+          </button>
+        </form>
+
+        <div class="auth-footer-clean">
+          <span>Already have an account?</span>
+          <a href="/login">Sign in</a>
+        </div>
+      </div>
+    </div>
+
   </div>
+
+
 
   <script>
     // Dynamic position dropdown based on department selection
@@ -149,6 +418,9 @@
         posSelect.appendChild(opt);
       });
     });
+
+
   </script>
+<%- include('partials/cookie-banner') %>
 </body>
 </html>
